@@ -2,7 +2,7 @@
  * context.js — 파이프라인 ①: 실행 컨텍스트 생성 (코드 단계)
  *
  * KST 날짜를 기준으로 오늘의 일진(60갑자)·연간지·십성 관계를 계산하고,
- * 오늘 발행할 주기(daily/weekly/monthly/yearly/holiday)를 판정해
+ * 오늘 발행할 주기(daily/weekly/monthly/yearly)를 판정해
  * work/<날짜>/context.json 으로 스냅샷을 남긴다. AI는 이 파일을 읽고 해석만 한다.
  *
  * 사용:  node scripts/context.js
@@ -13,7 +13,6 @@
 const fs = require('fs');
 const path = require('path');
 const Manse = require('./lib/manse');
-const Holidays = require('./holidays');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -22,6 +21,14 @@ function calendarYearGanzhi(y) {
   const s = ((y - 4) % 10 + 10) % 10;
   const b = ((y - 4) % 12 + 12) % 12;
   return { name: Manse.STEMS[s] + Manse.BRANCHES[b] + '년', zodiac: Manse.ZODIAC_KO[b] + '띠', year: y };
+}
+
+function addDays(dateStr, n) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d) + n * 86400000);
+  return t.getUTCFullYear() + '-' +
+    String(t.getUTCMonth() + 1).padStart(2, '0') + '-' +
+    String(t.getUTCDate()).padStart(2, '0');
 }
 
 function main() {
@@ -42,15 +49,8 @@ function main() {
   if (p.d === 1) periods.push('monthly');
   if (p.m === 1 && p.d === 1) periods.push('yearly');
 
-  const holidayBlock = Holidays.holidayBlockStarting(date);
-  if (holidayBlock) periods.push('holiday');
-
-  if (!Holidays.hasYear(p.y)) {
-    console.warn(`::warning::공휴일 테이블에 ${p.y}년이 없습니다. scripts/holidays.js에 추가하세요. (연휴 특집 없이 진행)`);
-  }
-
   // ---- 주기별 부가 정보 ----
-  const weekRange = weekday === '월' ? { start: date, end: Holidays.addDays(date, 6) } : null;
+  const weekRange = weekday === '월' ? { start: date, end: addDays(date, 6) } : null;
 
   const context = {
     date,
@@ -68,14 +68,6 @@ function main() {
     new_year_ganzhi: periods.includes('yearly') ? calendarYearGanzhi(p.y) : undefined,
     // 오늘의 일간이 각 일간(사주 버킷)에 갖는 십성 관계 — 사주 역할 AI의 해석 근거
     saju_relations: Manse.sipseongMap(day.stemIndex),
-    today_holiday: Holidays.holidayOn(date)?.name || null,
-    holiday_block: holidayBlock
-      ? { name: holidayBlock.name, start: holidayBlock.start, end: holidayBlock.end, days: holidayBlock.days }
-      : null,
-    next_holiday: (() => {
-      const nb = Holidays.nextHolidayBlock(date, 14);
-      return nb ? { name: nb.name, start: nb.start, end: nb.end, days: nb.days } : null;
-    })(),
     week_range: weekRange,
     month: date.slice(0, 7),
     year: p.y,
@@ -88,7 +80,7 @@ function main() {
 
   console.log(`context 생성 완료: work/${date}/context.json`);
   console.log(`  ${date} (${weekday}) · ${context.day_ganzhi.name} · ${context.year_ganzhi.name}`);
-  console.log(`  발행 주기: ${periods.join(', ')}${holidayBlock ? ` · 연휴 특집: ${holidayBlock.name}` : ''}`);
+  console.log(`  발행 주기: ${periods.join(', ')}`);
 
   // GitHub Actions 출력 (워크플로가 역할·집필 단계에 주입)
   if (process.env.GITHUB_OUTPUT) {

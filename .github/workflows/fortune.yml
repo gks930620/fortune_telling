@@ -10,7 +10,7 @@ permissions:
 
 on:
   schedule:
-    - cron: "30 20 * * *"   # KST 05:30 매일 (주간·월간·신년·연휴 특집 여부는 스크립트가 판정)
+    - cron: "30 20 * * *"   # KST 05:30 매일 (주간·월간·신년 여부는 스크립트가 판정)
   workflow_dispatch:
     inputs:
       date:
@@ -24,7 +24,7 @@ concurrency:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    timeout-minutes: 90   # 1월 1일은 daily+monthly+yearly+신정 4주기 동시 생성이라 여유를 둔다
+    timeout-minutes: 90   # 1월 1일은 daily+monthly+yearly 3주기 동시 생성이라 여유를 둔다
     env:
       FORTUNE_DATE: ${{ inputs.date }}
     steps:
@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: "20"
 
-      # ① 수집·가공 (코드) — 날짜·일진·십성·연휴·발행 주기 판정
+      # ① 수집·가공 (코드) — 날짜·일진·십성·발행 주기 판정
       - name: 컨텍스트 생성
         id: ctx
         run: node scripts/context.js

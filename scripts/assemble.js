@@ -75,9 +75,6 @@ function main() {
     year_ganzhi: context.year_ganzhi,
     new_year_ganzhi: context.new_year_ganzhi,
     saju_relations: context.saju_relations,
-    today_holiday: context.today_holiday,
-    holiday_block: context.holiday_block,
-    next_holiday: context.next_holiday,
     week_range: context.week_range
   };
 
@@ -115,7 +112,6 @@ function main() {
     const prevDate = latest[period] && latest[period].date;
     if (!prevDate || date >= prevDate) {
       latest[period] = { date };
-      if (period === 'holiday' && context.holiday_block) latest[period].name = context.holiday_block.name;
       fs.writeFileSync(latestFile, JSON.stringify(latest, null, 2) + '\n', 'utf8');
     } else {
       console.log(`  latest.${period} 유지 (${prevDate}) — 백필 날짜 ${date}는 포인터 미갱신`);

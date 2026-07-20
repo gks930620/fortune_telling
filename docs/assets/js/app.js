@@ -111,11 +111,7 @@
     var line = data.date + ' (' + (ctx.weekday || '') + ') · ' +
       (ctx.day_ganzhi ? ctx.day_ganzhi.name : '') + ' · ' +
       (ctx.year_ganzhi ? ctx.year_ganzhi.name + ' ' + ctx.year_ganzhi.zodiac + ' 해' : '');
-    if (ctx.today_holiday) line += ' · 🎉 ' + ctx.today_holiday;
     $('todayLine').textContent = line;
-    if (ctx.next_holiday && !ctx.today_holiday) {
-      $('todayLine').textContent += ' · 다가오는 연휴: ' + ctx.next_holiday.name + '(' + ctx.next_holiday.start + ')';
-    }
 
     var birth = p && p.birth ? Manse.parseDate(p.birth) : null;
 

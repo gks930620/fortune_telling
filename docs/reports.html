@@ -3,7 +3,7 @@ layout: default
 title: 운세 리포트
 ---
 <h1 class="page-title">운세 리포트 아카이브</h1>
-<p class="page-desc">매일·매주 월요일·매월 1일·매년 1월 1일·연휴 첫날 새벽에 자동 발행됩니다.</p>
+<p class="page-desc">매일·매주 월요일·매월 1일·매년 1월 1일 새벽에 자동 발행됩니다.</p>
 
 {% if site.posts.size == 0 %}
 <p class="empty">아직 발행된 리포트가 없습니다. 내일 새벽에 첫 리포트가 도착해요.</p>
@@ -14,7 +14,7 @@ title: 운세 리포트
   <li>
     <span class="badge badge-{{ post.period | default: 'daily' }}">
       {%- case post.period -%}
-        {%- when 'weekly' -%}주간{%- when 'monthly' -%}월간{%- when 'yearly' -%}신년{%- when 'holiday' -%}연휴 특집{%- else -%}오늘
+        {%- when 'weekly' -%}주간{%- when 'monthly' -%}월간{%- when 'yearly' -%}신년{%- else -%}오늘
       {%- endcase -%}
     </span>
     <a href="{{ post.url | relative_url }}">{{ post.title }}</a>

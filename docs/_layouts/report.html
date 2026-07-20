@@ -5,7 +5,7 @@ layout: default
   <header class="report-header">
     <span class="badge badge-{{ page.period | default: 'daily' }}">
       {%- case page.period -%}
-        {%- when 'weekly' -%}주간{%- when 'monthly' -%}월간{%- when 'yearly' -%}신년{%- when 'holiday' -%}연휴 특집{%- else -%}오늘
+        {%- when 'weekly' -%}주간{%- when 'monthly' -%}월간{%- when 'yearly' -%}신년{%- else -%}오늘
       {%- endcase -%}
     </span>
     <h1>{{ page.title }}</h1>
