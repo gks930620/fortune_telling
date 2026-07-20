@@ -1,0 +1,43 @@
+{
+  "date": "2026-07-20",
+  "weekday": "월",
+  "periods": [
+    "daily",
+    "weekly"
+  ],
+  "day_ganzhi": {
+    "name": "을미일",
+    "stem": "을",
+    "branch": "미",
+    "stem_element": "목",
+    "branch_element": "토",
+    "yang": false
+  },
+  "year_ganzhi": {
+    "name": "병오년",
+    "zodiac": "말띠",
+    "effective_year": 2026
+  },
+  "saju_relations": {
+    "gap": "겁재",
+    "eul": "비견",
+    "byeong": "정인",
+    "jeong": "편인",
+    "mu": "정관",
+    "gi": "편관",
+    "gyeong": "정재",
+    "sin": "편재",
+    "im": "상관",
+    "gye": "식신"
+  },
+  "today_holiday": null,
+  "holiday_block": null,
+  "next_holiday": null,
+  "week_range": {
+    "start": "2026-07-20",
+    "end": "2026-07-26"
+  },
+  "month": "2026-07",
+  "year": 2026,
+  "generated_at": "2026-07-20T12:53:13.403Z"
+}

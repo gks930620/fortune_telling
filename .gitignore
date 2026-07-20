@@ -1,0 +1,6 @@
+# 로컬 전용 — Claude Code 스킬·설정 (공개 저장소에 올리지 않는다)
+.claude/
+
+node_modules/
+.DS_Store
+Thumbs.db

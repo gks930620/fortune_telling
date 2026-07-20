@@ -1,0 +1,66 @@
+---
+layout: default
+---
+<h1 class="page-title">오늘의 운세</h1>
+<p class="today-line" id="todayLine">운세를 불러오는 중…</p>
+<div class="notice hidden" id="notice"></div>
+
+<section class="profile-card">
+  <h2>내 정보 <small style="font-weight:400;color:var(--sub)">(브라우저에만 저장됩니다)</small></h2>
+  <div class="profile-form" id="profileForm">
+    <label>생년월일
+      <input type="date" id="inBirth" min="1930-01-01">
+    </label>
+    <label>혈액형
+      <select id="inBlood"><option value="">선택 안 함</option></select>
+    </label>
+    <label>MBTI
+      <select id="inMbti"><option value="">선택 안 함</option></select>
+    </label>
+    <button class="primary" id="btnSave">저장</button>
+  </div>
+  <div class="profile-summary hidden" id="profileSummary"></div>
+</section>
+
+<div class="fortune-grid">
+  <section class="fortune-card" id="card-saju">
+    <h3>📜 사주 운세</h3>
+    <div class="who"></div>
+    <div class="body"><p class="placeholder">생년월일을 입력하면 일간(日干) 기준 사주 운세를 보여드려요.</p></div>
+  </section>
+
+  <section class="fortune-card" id="card-tti">
+    <h3>🐲 띠 운세</h3>
+    <div class="who"></div>
+    <div class="body"><p class="placeholder">생년월일을 입력하면 띠를 계산해 드려요. (입춘 기준)</p></div>
+  </section>
+
+  <section class="fortune-card" id="card-zodiac">
+    <h3>✨ 별자리 운세</h3>
+    <div class="who"></div>
+    <div class="body"><p class="placeholder">생년월일을 입력하면 별자리 운세를 보여드려요.</p></div>
+  </section>
+
+  <section class="fortune-card" id="card-blood">
+    <h3>🩸 혈액형 운세</h3>
+    <div class="who"></div>
+    <div class="body"><p class="placeholder">혈액형을 선택하면 보여드려요.</p></div>
+  </section>
+
+  <section class="fortune-card wide" id="card-tarot">
+    <h3>🃏 오늘의 타로</h3>
+    <p class="who">마음속으로 질문을 떠올리고, 카드 한 장을 골라보세요. (해석은 매일 새벽 새로 준비됩니다)</p>
+    <div class="body"></div>
+  </section>
+
+  <section class="fortune-card wide" id="card-mbti">
+    <h3>🧭 MBTI 운세</h3>
+    <div class="who"></div>
+    <div class="body"><p class="placeholder">MBTI를 선택하면 보여드려요.</p></div>
+  </section>
+</div>
+
+<p style="margin-top:24px"><a href="{{ '/reports.html' | relative_url }}">📚 전체 리포트 보러 가기 →</a></p>
+
+<script src="{{ '/assets/js/manse.js' | relative_url }}"></script>
+<script src="{{ '/assets/js/app.js' | relative_url }}"></script>

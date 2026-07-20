@@ -1,0 +1,18 @@
+---
+layout: default
+---
+<article class="report">
+  <header class="report-header">
+    <span class="badge badge-{{ page.period | default: 'daily' }}">
+      {%- case page.period -%}
+        {%- when 'weekly' -%}주간{%- when 'monthly' -%}월간{%- when 'yearly' -%}신년{%- when 'holiday' -%}연휴 특집{%- else -%}오늘
+      {%- endcase -%}
+    </span>
+    <h1>{{ page.title }}</h1>
+    <time datetime="{{ page.date | date: '%Y-%m-%d' }}">{{ page.date | date: '%Y년 %-m월 %-d일' }} 발행</time>
+  </header>
+  <div class="report-body">
+    {{ content }}
+  </div>
+  <p class="report-back"><a href="{{ '/reports.html' | relative_url }}">← 리포트 목록</a></p>
+</article>

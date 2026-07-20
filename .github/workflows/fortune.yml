@@ -1,0 +1,106 @@
+# 오늘의 운세 — 매일 새벽 자동 생성 파이프라인
+#
+# cron은 UTC다: 20:30 UTC = KST 05:30 (다음날 새벽).
+# "아침 6시에 보면 준비돼 있음"을 목표로, GitHub cron 지연(수십 분)을 감안해 30분 여유를 둔다.
+# 인증은 구독 토큰(CLAUDE_CODE_OAUTH_TOKEN)만 사용한다 — API 키를 Secrets에 두지 말 것(과금 방지).
+name: fortune
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: "30 20 * * *"   # KST 05:30 매일 (주간·월간·신년·연휴 특집 여부는 스크립트가 판정)
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "KST 날짜 오버라이드 (YYYY-MM-DD, 백필·재생용)"
+        required: false
+
+concurrency:
+  group: fortune
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90   # 1월 1일은 daily+monthly+yearly+신정 4주기 동시 생성이라 여유를 둔다
+    env:
+      FORTUNE_DATE: ${{ inputs.date }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # ① 수집·가공 (코드) — 날짜·일진·십성·연휴·발행 주기 판정
+      - name: 컨텍스트 생성
+        id: ctx
+        run: node scripts/context.js
+
+      - name: Claude Code 설치
+        run: npm install -g @anthropic-ai/claude-code
+
+      # ② 판단 (AI 6역할, 독립 세션 — 서로의 출력을 모른다)
+      #    한 역할이 실패해도 나머지는 진행한다 (assemble이 빠진 타입을 건너뜀)
+      - name: 역할 AI — 운세 생성 (6종)
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          FORTUNE_DATE: ${{ steps.ctx.outputs.date }}
+        run: |
+          DATE="${{ steps.ctx.outputs.date }}"
+          PERIODS="${{ steps.ctx.outputs.periods }}"
+          for R in tti saju zodiac tarot blood mbti; do
+            PROMPT="$(cat prompts/role-$R.md prompts/common.md)
+
+          [실행 안내]
+          - 오늘(KST): ${DATE} / 생성할 주기: ${PERIODS}
+          - 입력: work/${DATE}/context.json 을 읽어라 (날짜·일진은 여기 있는 값만 사용)
+          - 출력: work/${DATE}/${R}.json — 이 파일 하나만 생성한다
+          - git 금지. 다른 파일 생성·수정 금지."
+            claude -p "$PROMPT" --model sonnet --permission-mode bypassPermissions \
+              || echo "::warning::역할 $R 실패 — 해당 타입 제외하고 진행"
+          done
+
+      # ③ 정산 (코드) — 스키마 검증·병합 → docs/data/, 만세력 모듈 동기화
+      - name: 검증·병합
+        env:
+          FORTUNE_DATE: ${{ steps.ctx.outputs.date }}
+        run: node scripts/assemble.js
+
+      # ④ 집필 (AI 1명) — 병합 데이터를 읽고 사람용 리포트 작성 (주기별 1편)
+      - name: 집필 AI — 리포트 작성
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          DATE="${{ steps.ctx.outputs.date }}"
+          for PERIOD in $(echo "${{ steps.ctx.outputs.periods }}" | tr ',' ' '); do
+            if [ ! -f "docs/data/${PERIOD}/${DATE}.json" ]; then
+              echo "::warning::${PERIOD} 병합 데이터 없음 — 리포트 생략"
+              continue
+            fi
+            PROMPT="$(cat prompts/writer.md)
+
+          [실행 안내]
+          - 오늘(KST): ${DATE} / 이번 리포트의 주기: ${PERIOD}
+          - 입력: docs/data/${PERIOD}/${DATE}.json 을 읽어라
+          - 출력: docs/_posts/${DATE}-${PERIOD}.md — 이 파일 하나만 생성한다
+          - git 금지. 다른 파일 생성·수정 금지."
+            claude -p "$PROMPT" --model opus --effort high --permission-mode bypassPermissions \
+              || echo "::warning::${PERIOD} 리포트 집필 실패 — 데이터(JSON)는 정상 게시됨"
+          done
+
+      # ⑤ 게시 — 커밋·push → GitHub Pages(Jekyll)가 자동 재빌드
+      #    앞 단계가 실패해도(전량 실패 포함) 컨텍스트 스냅샷과 부분 산출물은 커밋해 근거를 남긴다
+      - name: 커밋·푸시
+        if: always()
+        run: |
+          git config user.name "fortune-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase --autostash || true
+          git add -A
+          git diff --cached --quiet || {
+            git commit -m "auto: ${{ steps.ctx.outputs.date }} 운세 (${{ steps.ctx.outputs.periods }})"
+            git push
+          }

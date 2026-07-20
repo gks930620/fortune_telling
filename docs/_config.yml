@@ -1,0 +1,7 @@
+title: 오늘의 운세
+description: AI가 매일 새벽 미리 만들어두는 띠·사주·별자리·타로·혈액형·MBTI 운세
+lang: ko
+timezone: Asia/Seoul
+markdown: kramdown
+permalink: /reports/:year/:month/:day/:title/
+# 이 폴더(docs/)가 사이트 루트다. prompts/·scripts/·work/ 는 저장소 상위에 있어 빌드에 안 섞인다.
