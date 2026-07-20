@@ -1,0 +1,36 @@
+{
+  "date": "2026-07-21",
+  "weekday": "화",
+  "periods": [
+    "daily"
+  ],
+  "day_ganzhi": {
+    "name": "병신일",
+    "stem": "병",
+    "branch": "신",
+    "stem_element": "화",
+    "branch_element": "금",
+    "yang": true
+  },
+  "year_ganzhi": {
+    "name": "병오년",
+    "zodiac": "말띠",
+    "effective_year": 2026
+  },
+  "saju_relations": {
+    "gap": "식신",
+    "eul": "상관",
+    "byeong": "비견",
+    "jeong": "겁재",
+    "mu": "편인",
+    "gi": "정인",
+    "gyeong": "편관",
+    "sin": "정관",
+    "im": "편재",
+    "gye": "정재"
+  },
+  "week_range": null,
+  "month": "2026-07",
+  "year": 2026,
+  "generated_at": "2026-07-20T21:43:01.729Z"
+}
