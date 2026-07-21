@@ -44,7 +44,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
 
       # ① 수집·가공 (코드) — 날짜·일진·십성·발행 주기 판정
       - name: 컨텍스트 생성
@@ -123,9 +123,16 @@ jobs:
         run: |
           git config user.name "fortune-bot"
           git config user.email "actions@users.noreply.github.com"
-          git pull --rebase --autostash || true
           git add -A
-          git diff --cached --quiet || {
-            git commit -m "auto: ${{ steps.ctx.outputs.date }} 운세 (${{ steps.ctx.outputs.periods }})"
-            git push
-          }
+          if git diff --cached --quiet; then
+            echo "변경 없음 — 커밋 생략"
+            exit 0
+          fi
+          git commit -m "auto: ${{ steps.ctx.outputs.date }} 운세 (${{ steps.ctx.outputs.periods }})"
+          # 반드시 "커밋 후" pull — 커밋 전에 pull하면 이번 실행이 만든 미추적 파일과
+          # 원격 커밋이 충돌해 산출물을 통째로 잃는다 (2026-07-21 실제 사고).
+          # 원격이 앞서 있으면(재실행·수동 푸시 경합) 리베이스하고, 같은 파일이 양쪽에
+          # 있으면 이번 실행 산출물(-X theirs)이 이긴다. 1회 재시도 후에도 실패하면 크게 실패.
+          git pull --rebase -X theirs origin main \
+            || { git rebase --abort || true; git pull --rebase -X theirs origin main; }
+          git push origin main
