@@ -1,7 +1,7 @@
 # 오늘의 운세 — 매일 새벽 자동 생성 파이프라인
 #
-# cron은 UTC다: 20:30 UTC = KST 05:30 (다음날 새벽).
-# "아침 6시에 보면 준비돼 있음"을 목표로, GitHub cron 지연(수십 분)을 감안해 30분 여유를 둔다.
+# cron은 UTC다: 18:00 UTC = KST 03:00 (다음날 새벽).
+# GitHub cron은 수십 분 지연될 수 있지만 새벽 3시 시작이라 아침 전 완료에 여유가 충분하다.
 # 인증은 구독 토큰(CLAUDE_CODE_OAUTH_TOKEN)만 사용한다 — API 키를 Secrets에 두지 말 것(과금 방지).
 name: fortune
 
@@ -10,11 +10,11 @@ permissions:
 
 on:
   schedule:
-    - cron: "30 20 * * *"   # KST 05:30 매일 (주간·월간·신년 여부는 스크립트가 판정)
+    - cron: "0 18 * * *"   # KST 03:00 매일 (주간·월간·신년 여부는 스크립트가 판정)
   workflow_dispatch:
     inputs:
       date:
-        description: "KST 날짜 오버라이드 (YYYY-MM-DD, 백필·재생용)"
+        description: "KST 날짜 오버라이드 (YYYY-MM-DD, 백필·재생용. 비우면 오늘)"
         required: false
 
 concurrency:
@@ -30,6 +30,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 실패의 최다 원인은 Secret 미등록 — 시작 전에 명확하게 걸러낸다
+      - name: 토큰 등록 확인
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "::error::CLAUDE_CODE_OAUTH_TOKEN Secret이 등록되지 않았습니다."
+            echo "::error::저장소 Settings → Secrets and variables → Actions → New repository secret 에서 등록하세요. (Deploy keys 아님!)"
+            exit 1
+          fi
+          echo "토큰 확인 완료 (길이: ${#CLAUDE_CODE_OAUTH_TOKEN})"
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -40,18 +52,21 @@ jobs:
         run: node scripts/context.js
 
       - name: Claude Code 설치
-        run: npm install -g @anthropic-ai/claude-code
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude --version   # 설치가 깨졌으면 여기서 바로 실패
 
       # ② 판단 (AI 6역할, 독립 세션 — 서로의 출력을 모른다)
-      #    한 역할이 실패해도 나머지는 진행한다 (assemble이 빠진 타입을 건너뜀)
+      #    한 역할이 실패해도 나머지는 진행하되, 실패 이유(종료 코드·파일 유무)를 로그에 남긴다
       - name: 역할 AI — 운세 생성 (6종)
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          FORTUNE_DATE: ${{ steps.ctx.outputs.date }}
         run: |
           DATE="${{ steps.ctx.outputs.date }}"
           PERIODS="${{ steps.ctx.outputs.periods }}"
+          MISSING=0
           for R in tti saju zodiac tarot blood mbti; do
+            echo "──── 역할 [$R] 시작 ($(date -u +%H:%M:%S) UTC)"
             PROMPT="$(cat prompts/role-$R.md prompts/common.md)
 
           [실행 안내]
@@ -60,8 +75,16 @@ jobs:
           - 출력: work/${DATE}/${R}.json — 이 파일 하나만 생성한다
           - git 금지. 다른 파일 생성·수정 금지."
             claude -p "$PROMPT" --model sonnet --permission-mode bypassPermissions \
-              || echo "::warning::역할 $R 실패 — 해당 타입 제외하고 진행"
+              || echo "::warning::역할 $R: claude 종료 코드 $? — 위 출력에서 원인 확인"
+            if [ ! -f "work/${DATE}/${R}.json" ]; then
+              echo "::warning::역할 $R: 출력 파일 미생성 (work/${DATE}/${R}.json)"
+              MISSING=$((MISSING+1))
+            fi
           done
+          if [ "$MISSING" -eq 6 ]; then
+            echo "::error::역할 6종 전부 출력 실패 — 위 로그의 claude 오류 메시지를 확인하세요 (토큰 만료/한도 소진 가능성)"
+            exit 1
+          fi
 
       # ③ 정산 (코드) — 스키마 검증·병합 → docs/data/, 만세력 모듈 동기화
       - name: 검증·병합
@@ -88,7 +111,9 @@ jobs:
           - 출력: docs/_posts/${DATE}-${PERIOD}.md — 이 파일 하나만 생성한다
           - git 금지. 다른 파일 생성·수정 금지."
             claude -p "$PROMPT" --model opus --effort high --permission-mode bypassPermissions \
-              || echo "::warning::${PERIOD} 리포트 집필 실패 — 데이터(JSON)는 정상 게시됨"
+              || echo "::warning::${PERIOD} 리포트: claude 종료 코드 $?"
+            [ -f "docs/_posts/${DATE}-${PERIOD}.md" ] \
+              || echo "::warning::${PERIOD} 리포트 파일 미생성 — 데이터(JSON)는 정상 게시됨"
           done
 
       # ⑤ 게시 — 커밋·push → GitHub Pages(Jekyll)가 자동 재빌드
