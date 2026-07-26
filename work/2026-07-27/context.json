@@ -1,0 +1,40 @@
+{
+  "date": "2026-07-27",
+  "weekday": "월",
+  "periods": [
+    "daily",
+    "weekly"
+  ],
+  "day_ganzhi": {
+    "name": "임인일",
+    "stem": "임",
+    "branch": "인",
+    "stem_element": "수",
+    "branch_element": "목",
+    "yang": true
+  },
+  "year_ganzhi": {
+    "name": "병오년",
+    "zodiac": "말띠",
+    "effective_year": 2026
+  },
+  "saju_relations": {
+    "gap": "편인",
+    "eul": "정인",
+    "byeong": "편관",
+    "jeong": "정관",
+    "mu": "편재",
+    "gi": "정재",
+    "gyeong": "식신",
+    "sin": "상관",
+    "im": "비견",
+    "gye": "겁재"
+  },
+  "week_range": {
+    "start": "2026-07-27",
+    "end": "2026-08-02"
+  },
+  "month": "2026-07",
+  "year": 2026,
+  "generated_at": "2026-07-26T19:06:00.143Z"
+}
