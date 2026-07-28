@@ -1,13 +1,19 @@
 /**
  * app.js — 오늘의 운세 프론트엔드
  *
- * 서버·AI 호출 없음. 매일 새벽 배치가 만든 정적 JSON(data/daily/<날짜>.json)을 읽고,
- * 사용자 입력(생년월일 등) → 버킷 변환은 전부 브라우저에서 Manse(만세력 모듈)로 계산한다.
+ * 서버·AI 호출 없음. 매일 새벽 배치가 만든 정적 JSON(data/daily/<날짜>.json)을 읽는다.
+ * 페이지 진입점은 window.PAGE 로 구분한다 (home / tti / zodiac / saju / tarot).
+ *
+ * 데이터 경로는 window.DATA_BASE(Jekyll이 baseurl을 붙여 주입)를 쓴다.
+ * 상대경로('data/…')를 쓰면 하위 경로 페이지에서 깨지므로 직접 조립하지 말 것.
+ *
  * 운세 텍스트는 AI 생성물이므로 반드시 textContent로만 렌더링한다(HTML 주입 방지).
  */
 (function () {
   'use strict';
 
+  var BASE = window.DATA_BASE || 'data/';
+  var PAGE = window.PAGE || 'home';
   var PROFILE_KEY = 'fortune_profile';
   var TAROT_KEY = 'fortune_tarot_pick';
 
@@ -18,18 +24,12 @@
   function el(tag, cls, text) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
-    if (text !== undefined) e.textContent = text;
+    if (text !== undefined && text !== null) e.textContent = text;
     return e;
   }
 
-  // ---- 프로필 (localStorage) ----
-  function loadProfile() {
-    try { return JSON.parse(localStorage.getItem(PROFILE_KEY)) || null; }
-    catch (e) { return null; }
-  }
-  function saveProfile(p) { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); }
-
   // ---- 데이터 로드 (오늘 → latest 폴백) ----
+
   function fetchJSON(url) {
     return fetch(url, { cache: 'no-cache' }).then(function (r) {
       if (!r.ok) throw new Error(url + ' ' + r.status);
@@ -39,10 +39,10 @@
 
   function loadData() {
     var today = Manse.kstToday();
-    return fetchJSON('data/daily/' + today + '.json').catch(function () {
-      return fetchJSON('data/latest.json').then(function (latest) {
+    return fetchJSON(BASE + 'daily/' + today + '.json').catch(function () {
+      return fetchJSON(BASE + 'latest.json').then(function (latest) {
         if (!latest.daily || !latest.daily.date) throw new Error('no data');
-        return fetchJSON('data/daily/' + latest.daily.date + '.json').then(function (data) {
+        return fetchJSON(BASE + 'daily/' + latest.daily.date + '.json').then(function (data) {
           if (latest.daily.date !== today) {
             showNotice('오늘(' + today + ') 운세가 아직 준비되지 않아 최신(' + latest.daily.date + ') 운세를 보여드려요.');
           }
@@ -54,251 +54,301 @@
 
   function showNotice(msg) {
     var n = $('notice');
+    if (!n) return;
     n.textContent = msg;
     n.classList.remove('hidden');
   }
 
   // ---- 공통 렌더 ----
+
   function starsEl(score) {
     var wrap = el('span', 'stars');
     wrap.appendChild(el('span', null, '★'.repeat(score)));
     if (score < 5) wrap.appendChild(el('span', 'off', '★'.repeat(5 - score)));
+    wrap.setAttribute('aria-label', '5점 만점에 ' + score + '점');
     return wrap;
   }
 
-  function renderEntry(card, entry, extraLine) {
-    var body = card.querySelector('.body');
-    body.textContent = '';
-    var head = el('div');
-    head.appendChild(starsEl(entry.score));
-    head.appendChild(el('span', 'chip keyword', entry.keyword));
-    body.appendChild(head);
-    if (extraLine) body.appendChild(el('div', 'who', extraLine));
-    body.appendChild(el('p', 'fortune-text', entry.text));
-    body.appendChild(el('p', 'fortune-advice', entry.advice));
+  /** 운세 본문(키워드·텍스트·조언·행운) 노드들을 target에 붙인다 */
+  function appendEntry(target, entry) {
+    target.appendChild(el('span', 'chip keyword', entry.keyword));
+    target.appendChild(el('p', 'fortune-text', entry.text));
+    target.appendChild(el('p', 'fortune-advice', entry.advice));
     if (entry.lucky && (entry.lucky.color || entry.lucky.number !== undefined)) {
       var parts = [];
       if (entry.lucky.color) parts.push('행운의 색 ' + entry.lucky.color);
       if (entry.lucky.number !== undefined) parts.push('행운의 숫자 ' + entry.lucky.number);
-      body.appendChild(el('div', 'lucky', '🍀 ' + parts.join(' · ')));
+      target.appendChild(el('div', 'lucky', '🍀 ' + parts.join(' · ')));
     }
   }
 
-  function renderMissing(card, label) {
-    var body = card.querySelector('.body');
-    body.textContent = '';
-    body.appendChild(el('p', 'placeholder', label || '오늘은 이 운세가 준비되지 못했어요. 내일 다시 만나요.'));
+  /** 버킷 카드 하나 — { icon, title, sub, entry, highlight } */
+  function bucketCard(o) {
+    var card = el('article', 'bucket-card' + (o.highlight ? ' highlight' : ''));
+    var head = el('header', 'b-head');
+    if (o.icon) head.appendChild(el('span', 'b-icon', o.icon));
+    head.appendChild(el('span', 'b-title', o.title));
+    head.appendChild(starsEl(o.entry.score));
+    card.appendChild(head);
+    if (o.sub) card.appendChild(el('div', 'b-sub', o.sub));
+    appendEntry(card, o.entry);
+    return card;
   }
 
-  /* 프로필 항목이 지워졌을 때 이전 운세가 화면에 남지 않도록 카드를 초기 안내 문구로 되돌린다 */
-  function resetCard(card, msg) {
-    setWho(card, '');
-    renderMissing(card, msg);
+  function renderTodayLine() {
+    var line = $('todayLine');
+    if (!line) return;
+    var d = state.data, ctx = d.context || {};
+    var txt = d.date + ' (' + (ctx.weekday || '') + ')';
+    if (ctx.day_ganzhi) txt += ' · ' + ctx.day_ganzhi.name;
+    if (ctx.year_ganzhi) txt += ' · ' + ctx.year_ganzhi.name + ' ' + ctx.year_ganzhi.zodiac + ' 해';
+    line.textContent = txt;
   }
 
-  function setWho(card, text) {
-    var w = card.querySelector('.who');
-    if (w) w.textContent = text || '';
+  function typeMissing(container, label) {
+    container.textContent = '';
+    container.appendChild(el('p', 'placeholder',
+      '오늘은 ' + label + ' 운세가 준비되지 못했어요. 내일 새벽에 다시 만나요.'));
   }
 
-  // ---- 섹션별 렌더 ----
-  function renderAll() {
-    var data = state.data, p = state.profile;
-    var types = data.types || {};
+  // ---- 띠 ----
 
-    // 상단 날짜 줄
-    var ctx = data.context || {};
-    var line = data.date + ' (' + (ctx.weekday || '') + ') · ' +
-      (ctx.day_ganzhi ? ctx.day_ganzhi.name : '') + ' · ' +
-      (ctx.year_ganzhi ? ctx.year_ganzhi.name + ' ' + ctx.year_ganzhi.zodiac + ' 해' : '');
-    $('todayLine').textContent = line;
-
-    var birth = p && p.birth ? Manse.parseDate(p.birth) : null;
-
-    // 사주 (일간)
-    var sajuCard = $('card-saju');
-    if (!birth) { resetCard(sajuCard, '생년월일을 입력하면 일간(日干) 기준 사주 운세를 보여드려요.'); }
-    else if (!types.saju) { renderMissing(sajuCard); }
-    else {
-      var stem = Manse.dayStemFromBirth(birth.y, birth.m, birth.d);
-      setWho(sajuCard, '나의 일간: ' + stem.ko + '(' + stem.element + ') · 일주 ' + stem.dayPillar);
-      var rel = ctx.saju_relations ? ctx.saju_relations[stem.id] : null;
-      renderEntry(sajuCard, types.saju[stem.id],
-        rel ? '오늘은 당신에게 「' + rel + '」의 날' : null);
-    }
-
-    // 띠
-    var ttiCard = $('card-tti');
-    if (!birth) { resetCard(ttiCard, '생년월일을 입력하면 띠를 계산해 드려요. (입춘 기준)'); }
-    else if (!types.tti) { renderMissing(ttiCard); }
-    else {
-      var z = Manse.zodiacFromBirth(birth.y, birth.m, birth.d);
-      setWho(ttiCard, '나의 띠: ' + z.ko + '띠');
-      renderEntry(ttiCard, types.tti[z.id]);
-    }
-
-    // 별자리
-    var zodCard = $('card-zodiac');
-    if (!birth) { resetCard(zodCard, '생년월일을 입력하면 별자리 운세를 보여드려요.'); }
-    else if (!types.zodiac) { renderMissing(zodCard); }
-    else {
-      var s = Manse.starSignFromBirth(birth.m, birth.d);
-      setWho(zodCard, '나의 별자리: ' + s.ko);
-      renderEntry(zodCard, types.zodiac[s.id]);
-    }
-
-    // 혈액형
-    var bloodCard = $('card-blood');
-    if (!p || !p.blood) { resetCard(bloodCard, '혈액형을 선택하면 보여드려요.'); }
-    else if (!types.blood) { renderMissing(bloodCard); }
-    else { setWho(bloodCard, p.blood + '형'); renderEntry(bloodCard, types.blood[p.blood]); }
-
-    // MBTI
-    var mbtiCard = $('card-mbti');
-    if (!p || !p.mbti) { resetCard(mbtiCard, 'MBTI를 선택하면 보여드려요.'); }
-    else if (!types.mbti) { renderMissing(mbtiCard); }
-    else { setWho(mbtiCard, p.mbti); renderEntry(mbtiCard, types.mbti[p.mbti]); }
-
-    renderTarot();
+  function ttiYearsText(id) {
+    var ys = Manse.zodiacYears(id, 1936, 2025);
+    return ys.map(function (y) { return String(y).slice(2); }).join(' · ') + '년생';
   }
 
-  // ---- 타로 ----
-  function loadTarotPick() {
-    try { return JSON.parse(localStorage.getItem(TAROT_KEY)) || null; }
+  function initTti() {
+    var list = $('list');
+    var buckets = (state.data.types || {}).tti;
+    if (!buckets) return typeMissing(list, '띠');
+    Manse.ZODIAC_IDS.forEach(function (id) {
+      var info = Manse.zodiacInfo(id);
+      if (!buckets[id]) return;
+      list.appendChild(bucketCard({
+        icon: info.emoji,
+        title: info.ko + '띠',
+        sub: ttiYearsText(id),
+        entry: buckets[id]
+      }));
+    });
+  }
+
+  // ---- 별자리 ----
+
+  function initZodiac() {
+    var list = $('list');
+    var buckets = (state.data.types || {}).zodiac;
+    if (!buckets) return typeMissing(list, '별자리');
+    Manse.STAR_SIGNS.forEach(function (s) {
+      if (!buckets[s.id]) return;
+      list.appendChild(bucketCard({
+        icon: s.symbol,
+        title: s.ko,
+        sub: Manse.starSignRange(s),
+        entry: buckets[s.id]
+      }));
+    });
+  }
+
+  // ---- 사주 ----
+
+  function loadProfile() {
+    try { return JSON.parse(localStorage.getItem(PROFILE_KEY)) || null; }
     catch (e) { return null; }
   }
 
-  function renderTarot() {
-    var card = $('card-tarot');
-    var body = card.querySelector('.body');
-    var types = state.data.types || {};
-    if (!types.tarot) { renderMissing(card); return; }
-
-    var pick = loadTarotPick();
-    if (pick && pick.date === state.data.date && types.tarot[pick.card]) {
-      renderTarotResult(body, pick.card);
-      return;
-    }
-    renderTarotDeck(body);
+  function sajuTitle(id) {
+    var s = Manse.sajuStemInfo(id);
+    return s.ko + '(' + s.hanja + ')' + s.element;
   }
 
-  function renderTarotDeck(body) {
-    body.textContent = '';
-    var deck = el('div', 'tarot-deck');
-    // 22장 뒷면 — 어떤 위치에 어떤 카드가 있는지는 뽑는 순간의 셔플로 결정
-    var order = Manse.TAROT.map(function (t) { return t.id; });
-    for (var i = order.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
-    }
-    order.forEach(function (cardId) {
-      var b = el('button', 'tarot-back');
-      b.setAttribute('aria-label', '뒤집힌 타로 카드');
-      b.addEventListener('click', function () {
-        localStorage.setItem(TAROT_KEY, JSON.stringify({ date: state.data.date, card: cardId }));
-        renderTarotResult(body, cardId);
-      });
-      deck.appendChild(b);
-    });
-    body.appendChild(deck);
-  }
-
-  function renderTarotResult(body, cardId) {
-    var entry = state.data.types.tarot[cardId];
-    var meta = null;
-    for (var i = 0; i < Manse.TAROT.length; i++) {
-      if (Manse.TAROT[i].id === cardId) { meta = Manse.TAROT[i]; break; }
-    }
-    body.textContent = '';
-    var name = el('div', 'tarot-card-name', (meta ? meta.ko : cardId));
-    if (meta) name.appendChild(el('small', null, meta.en + ' · ' + meta.id + '번'));
-    body.appendChild(name);
-    var head = el('div');
-    head.appendChild(starsEl(entry.score));
-    head.appendChild(el('span', 'chip keyword', entry.keyword));
-    body.appendChild(head);
-    body.appendChild(el('p', 'fortune-text', entry.text));
-    body.appendChild(el('p', 'fortune-advice', entry.advice));
-    var again = el('button', 'ghost', '다시 뽑기');
-    again.style.marginTop = '10px';
-    again.addEventListener('click', function () {
-      localStorage.removeItem(TAROT_KEY);
-      renderTarotDeck(body);
-    });
-    body.appendChild(again);
-  }
-
-  // ---- 프로필 UI ----
-  function fillSelects() {
-    var blood = $('inBlood');
-    Manse.BLOOD_TYPES.forEach(function (b) {
-      var o = el('option', null, b + '형'); o.value = b; blood.appendChild(o);
-    });
-    var mbti = $('inMbti');
-    Manse.MBTI_TYPES.forEach(function (t) {
-      var o = el('option', null, t); o.value = t; mbti.appendChild(o);
-    });
-  }
-
-  function showProfileSummary() {
+  function renderMySaju() {
+    var box = $('myResult');
+    box.textContent = '';
     var p = state.profile;
-    var sum = $('profileSummary');
-    var form = $('profileForm');
-    if (!p || (!p.birth && !p.blood && !p.mbti)) {
-      sum.classList.add('hidden'); form.classList.remove('hidden'); return;
-    }
+    var birth = p && p.birth ? Manse.parseDate(p.birth) : null;
+    if (!birth) return;
+
+    var buckets = (state.data.types || {}).saju;
+    if (!buckets) return typeMissing(box, '사주');
+
+    var stem = Manse.dayStemFromBirth(birth.y, birth.m, birth.d);
+    var entry = buckets[stem.id];
+    if (!entry) return typeMissing(box, '사주');
+
+    var rel = (state.data.context || {}).saju_relations;
+    rel = rel ? rel[stem.id] : null;
+
+    box.appendChild(el('h2', 'section-title', '나의 오늘'));
+    box.appendChild(bucketCard({
+      icon: '📜',
+      title: '나의 일간 · ' + sajuTitle(stem.id),
+      sub: (rel ? '오늘은 당신에게 「' + rel + '」의 날 · ' : '') + '태어난 날의 일주 ' + stem.dayPillar,
+      entry: entry,
+      highlight: true
+    }));
+  }
+
+  function showSajuSummary() {
+    var p = state.profile;
+    var sum = $('profileSummary'), form = $('profileForm');
+    if (!p || !p.birth) { sum.classList.add('hidden'); form.classList.remove('hidden'); return; }
+    var b = Manse.parseDate(p.birth);
+    if (!b) { sum.classList.add('hidden'); form.classList.remove('hidden'); return; }
+
     sum.textContent = '';
-    var b = p.birth ? Manse.parseDate(p.birth) : null; // 손상된 저장값 방어
-    if (b) {
-      var z = Manse.zodiacFromBirth(b.y, b.m, b.d);
-      var s = Manse.starSignFromBirth(b.m, b.d);
-      var stem = Manse.dayStemFromBirth(b.y, b.m, b.d);
-      sum.appendChild(el('span', 'chip', p.birth));
-      sum.appendChild(el('span', 'chip', z.ko + '띠'));
-      sum.appendChild(el('span', 'chip', s.ko));
-      sum.appendChild(el('span', 'chip', '일간 ' + stem.ko));
-    }
-    if (p.blood) sum.appendChild(el('span', 'chip', p.blood + '형'));
-    if (p.mbti) sum.appendChild(el('span', 'chip', p.mbti));
+    var stem = Manse.dayStemFromBirth(b.y, b.m, b.d);
+    sum.appendChild(el('span', 'chip', p.birth));
+    sum.appendChild(el('span', 'chip', '일간 ' + sajuTitle(stem.id)));
+
     var edit = el('button', 'ghost', '수정');
     edit.addEventListener('click', function () {
       sum.classList.add('hidden'); form.classList.remove('hidden');
     });
     sum.appendChild(edit);
+
+    var clear = el('button', 'ghost', '지우기');
+    clear.addEventListener('click', function () {
+      localStorage.removeItem(PROFILE_KEY);
+      state.profile = null;
+      $('inBirth').value = '';
+      $('myResult').textContent = '';
+      showSajuSummary();
+    });
+    sum.appendChild(clear);
+
     sum.classList.remove('hidden');
     form.classList.add('hidden');
   }
 
-  function wireProfile() {
-    var p = state.profile;
-    if (p) {
-      if (p.birth) $('inBirth').value = p.birth;
-      if (p.blood) $('inBlood').value = p.blood;
-      if (p.mbti) $('inMbti').value = p.mbti;
-    }
+  function initSaju() {
+    $('inBirth').max = Manse.kstToday();
+    state.profile = loadProfile();
+    if (state.profile && state.profile.birth) $('inBirth').value = state.profile.birth;
+
     $('btnSave').addEventListener('click', function () {
-      var birth = $('inBirth').value || null;
-      if (birth && !Manse.parseDate(birth)) birth = null;
-      state.profile = { birth: birth, blood: $('inBlood').value || null, mbti: $('inMbti').value || null };
-      saveProfile(state.profile);
-      showProfileSummary();
-      if (state.data) renderAll();
+      var v = $('inBirth').value;
+      if (!v || !Manse.parseDate(v)) {
+        showNotice('생년월일을 정확히 입력해 주세요.');
+        return;
+      }
+      state.profile = { birth: v };
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profile));
+      showSajuSummary();
+      renderMySaju();
+    });
+
+    showSajuSummary();
+    renderMySaju();
+
+    // 일간 10종 전체 (접었다 펴기)
+    var btn = $('btnAll'), list = $('list');
+    var buckets = (state.data.types || {}).saju;
+    if (!buckets) { btn.classList.add('hidden'); return; }
+
+    Manse.SAJU_STEM_IDS.forEach(function (id) {
+      if (!buckets[id]) return;
+      var rel = (state.data.context || {}).saju_relations;
+      rel = rel ? rel[id] : null;
+      list.appendChild(bucketCard({
+        icon: '📜',
+        title: sajuTitle(id),
+        sub: rel ? '오늘의 관계: ' + rel : '',
+        entry: buckets[id]
+      }));
+    });
+    btn.addEventListener('click', function () {
+      var open = list.classList.toggle('hidden') === false;
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? '일간 10가지 접기 ▴' : '일간 10가지 전체 보기 ▾';
     });
   }
 
-  // ---- 시작 ----
-  document.addEventListener('DOMContentLoaded', function () {
-    fillSelects();
-    $('inBirth').max = Manse.kstToday(); // 미래 날짜 입력 방지 (하드코딩 대신 동적)
-    state.profile = loadProfile();
-    wireProfile();
-    showProfileSummary();
+  // ---- 타로 ----
 
+  function loadPick() {
+    try { return JSON.parse(localStorage.getItem(TAROT_KEY)) || null; }
+    catch (e) { return null; }
+  }
+
+  function initTarot() {
+    var stage = $('stage');
+    var buckets = (state.data.types || {}).tarot;
+    if (!buckets) return typeMissing(stage, '타로');
+
+    var pick = loadPick();
+    if (pick && pick.date === state.data.date && buckets[pick.card]) showResult(stage, pick.card);
+    else showDeck(stage);
+  }
+
+  function showDeck(stage) {
+    stage.textContent = '';
+    stage.appendChild(el('p', 'deck-guide', '마음이 가는 카드를 한 장 골라주세요.'));
+
+    var deck = el('div', 'tarot-deck');
+    // 위치와 카드의 대응은 뽑는 순간마다 새로 섞인다
+    var order = Manse.TAROT.map(function (t) { return t.id; });
+    for (var i = order.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+    }
+    order.forEach(function (cardId, idx) {
+      var b = el('button', 'tarot-back');
+      b.setAttribute('aria-label', (idx + 1) + '번째 뒤집힌 카드 뽑기');
+      b.addEventListener('click', function () {
+        localStorage.setItem(TAROT_KEY, JSON.stringify({ date: state.data.date, card: cardId }));
+        showResult(stage, cardId);
+      });
+      deck.appendChild(b);
+    });
+    stage.appendChild(deck);
+  }
+
+  function showResult(stage, cardId) {
+    var entry = state.data.types.tarot[cardId];
+    var meta = Manse.tarotById(cardId);
+    stage.textContent = '';
+
+    var card = el('article', 'bucket-card highlight tarot-result');
+
+    var face = el('div', 'tarot-face');
+    face.appendChild(el('span', 'tarot-num', meta ? meta.id : cardId));
+    face.appendChild(el('span', 'tarot-ko', meta ? meta.ko : ''));
+    face.appendChild(el('span', 'tarot-en', meta ? meta.en : ''));
+    card.appendChild(face);
+
+    var head = el('header', 'b-head');
+    head.appendChild(el('span', 'b-title', '오늘 뽑은 카드'));
+    head.appendChild(starsEl(entry.score));
+    card.appendChild(head);
+
+    appendEntry(card, entry);
+    stage.appendChild(card);
+
+    stage.appendChild(el('p', 'fineprint', '카드는 하루에 한 장이에요. 내일 새벽에 새 해석이 준비됩니다.'));
+
+    var again = el('button', 'ghost', '다시 뽑기');
+    again.addEventListener('click', function () {
+      if (!window.confirm('오늘 뽑은 카드를 버리고 다시 뽑을까요?')) return;
+      localStorage.removeItem(TAROT_KEY);
+      showDeck(stage);
+    });
+    stage.appendChild(again);
+  }
+
+  // ---- 시작 ----
+
+  var ROUTES = { tti: initTti, zodiac: initZodiac, saju: initSaju, tarot: initTarot };
+
+  document.addEventListener('DOMContentLoaded', function () {
     loadData().then(function (data) {
       state.data = data;
-      renderAll();
+      renderTodayLine();
+      if (ROUTES[PAGE]) ROUTES[PAGE]();
     }).catch(function () {
-      $('todayLine').textContent = '아직 발행된 운세 데이터가 없습니다.';
+      var line = $('todayLine');
+      if (line) line.textContent = '아직 발행된 운세 데이터가 없습니다.';
       showNotice('첫 운세는 자동화가 처음 실행된 다음 날 새벽부터 제공됩니다.');
     });
   });

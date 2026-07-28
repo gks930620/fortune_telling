@@ -1,0 +1,19 @@
+---
+layout: default
+title: 띠 운세
+---
+<p class="crumb"><a href="{{ '/' | relative_url }}">← 홈</a></p>
+<h1 class="page-title">🐲 오늘의 띠 운세</h1>
+<p class="today-line" id="todayLine">불러오는 중…</p>
+<div class="notice hidden" id="notice"></div>
+
+<p class="page-desc">
+  12간지 전체를 한눈에 볼 수 있어요. 자기 띠를 찾아보세요.
+  <br><small>띠는 <strong>입춘(2월 4일) 기준</strong>입니다. 1월 1일~2월 3일에 태어났다면 앞 띠에 해당해요.</small>
+</p>
+
+<div class="bucket-grid" id="list"></div>
+
+<script>window.DATA_BASE = "{{ '/data/' | relative_url }}"; window.PAGE = "tti";</script>
+<script src="{{ '/assets/js/manse.js' | relative_url }}"></script>
+<script src="{{ '/assets/js/app.js' | relative_url }}"></script>

@@ -56,16 +56,22 @@ jobs:
           npm install -g @anthropic-ai/claude-code
           claude --version   # 설치가 깨졌으면 여기서 바로 실패
 
-      # ② 판단 (AI 6역할, 독립 세션 — 서로의 출력을 모른다)
+      # ② 판단 (AI 4역할, 독립 세션 — 서로의 출력을 모른다)
       #    한 역할이 실패해도 나머지는 진행하되, 실패 이유(종료 코드·파일 유무)를 로그에 남긴다
-      - name: 역할 AI — 운세 생성 (6종)
+      - name: 역할 AI — 운세 생성 (4종)
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
           DATE="${{ steps.ctx.outputs.date }}"
           PERIODS="${{ steps.ctx.outputs.periods }}"
+          # 역할 목록은 이 한 줄에서만 관리한다. 개수(TOTAL)는 루프에서 세므로
+          # 역할이 늘거나 줄어도 아래 '전량 실패' 판정이 깨지지 않는다.
+          # (예전엔 6이 하드코딩돼 있어 역할 수가 바뀌면 전량 실패를 못 잡았다.)
+          ROLES="tti saju zodiac tarot"
+          TOTAL=0
           MISSING=0
-          for R in tti saju zodiac tarot blood mbti; do
+          for R in $ROLES; do
+            TOTAL=$((TOTAL+1))
             echo "──── 역할 [$R] 시작 ($(date -u +%H:%M:%S) UTC)"
             PROMPT="$(cat prompts/role-$R.md prompts/common.md)
 
@@ -74,15 +80,22 @@ jobs:
           - 입력: work/${DATE}/context.json 을 읽어라 (날짜·일진은 여기 있는 값만 사용)
           - 출력: work/${DATE}/${R}.json — 이 파일 하나만 생성한다
           - git 금지. 다른 파일 생성·수정 금지."
-            claude -p "$PROMPT" --model sonnet --permission-mode bypassPermissions \
+            # --allowedTools: 도구를 파일 읽기·쓰기로만 제한한다 (Bash·git 실행 불가).
+            #   "git 금지·다른 파일 수정 금지"를 프롬프트 문장이 아니라 기술적으로 강제한다.
+            #   경로 단위 제한(예: Write(work/**))은 이 CLI에서 정상 동작하지 않아 쓰지 않는다.
+            # --max-turns: 세션이 헤매도 timeout-minutes를 통째로 태우지 않게 상한을 둔다
+            #   (2026-07-21: 약 73분 소모 후 산출물 0건).
+            claude -p "$PROMPT" --model sonnet \
+              --allowedTools "Read,Write,Edit" --max-turns 30 \
               || echo "::warning::역할 $R: claude 종료 코드 $? — 위 출력에서 원인 확인"
             if [ ! -f "work/${DATE}/${R}.json" ]; then
               echo "::warning::역할 $R: 출력 파일 미생성 (work/${DATE}/${R}.json)"
               MISSING=$((MISSING+1))
             fi
           done
-          if [ "$MISSING" -eq 6 ]; then
-            echo "::error::역할 6종 전부 출력 실패 — 위 로그의 claude 오류 메시지를 확인하세요 (토큰 만료/한도 소진 가능성)"
+          echo "역할 결과: ${TOTAL}종 중 $((TOTAL-MISSING))종 성공 / ${MISSING}종 실패"
+          if [ "$TOTAL" -gt 0 ] && [ "$MISSING" -eq "$TOTAL" ]; then
+            echo "::error::역할 ${TOTAL}종 전부 출력 실패 — 위 로그의 claude 오류 메시지를 확인하세요 (토큰 만료/한도 소진 가능성)"
             exit 1
           fi
 
@@ -110,7 +123,10 @@ jobs:
           - 입력: docs/data/${PERIOD}/${DATE}.json 을 읽어라
           - 출력: docs/_posts/${DATE}-${PERIOD}.md — 이 파일 하나만 생성한다
           - git 금지. 다른 파일 생성·수정 금지."
-            claude -p "$PROMPT" --model opus --effort high --permission-mode bypassPermissions \
+            # 역할 AI와 같은 이유로 도구를 파일 읽기·쓰기로만 제한한다.
+            # 집필은 장문이라 상한을 역할 AI보다 넉넉히 준다(잘리면 리포트 1편이 비게 된다).
+            claude -p "$PROMPT" --model opus --effort high \
+              --allowedTools "Read,Write,Edit" --max-turns 40 \
               || echo "::warning::${PERIOD} 리포트: claude 종료 코드 $?"
             [ -f "docs/_posts/${DATE}-${PERIOD}.md" ] \
               || echo "::warning::${PERIOD} 리포트 파일 미생성 — 데이터(JSON)는 정상 게시됨"

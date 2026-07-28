@@ -1,0 +1,18 @@
+---
+layout: default
+title: 별자리 운세
+---
+<p class="crumb"><a href="{{ '/' | relative_url }}">← 홈</a></p>
+<h1 class="page-title">✨ 오늘의 별자리 운세</h1>
+<p class="today-line" id="todayLine">불러오는 중…</p>
+<div class="notice hidden" id="notice"></div>
+
+<p class="page-desc">
+  12별자리 전체를 한눈에 볼 수 있어요. 생일이 속한 기간에서 자기 별자리를 찾아보세요.
+</p>
+
+<div class="bucket-grid" id="list"></div>
+
+<script>window.DATA_BASE = "{{ '/data/' | relative_url }}"; window.PAGE = "zodiac";</script>
+<script src="{{ '/assets/js/manse.js' | relative_url }}"></script>
+<script src="{{ '/assets/js/app.js' | relative_url }}"></script>

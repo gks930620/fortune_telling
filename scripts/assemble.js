@@ -1,7 +1,7 @@
 /**
  * assemble.js — 파이프라인 ④: AI 출력 검증·병합 (코드 단계)
  *
- * work/<날짜>/<type>.json (역할 AI 6종의 출력)을 스키마 검증하고,
+ * work/<날짜>/<type>.json (역할 AI 4종의 출력)을 스키마 검증하고,
  * 주기별로 병합해 docs/data/<주기>/<날짜>.json 과 docs/data/latest.json 을 만든다.
  * 한 타입이 불량이어도 나머지는 진행한다 (한 단계 실패 ≠ 전체 실패).
  *
@@ -16,13 +16,13 @@ const Manse = require('./lib/manse');
 const ROOT = path.join(__dirname, '..');
 
 // 타입별 기대 버킷 키 — prompts/common.md 와 반드시 일치해야 한다
+// 혈액형·MBTI는 2026-07-28에 제외했다 (운세로 보기 어렵다는 판단). 과거 날짜의 병합 결과에는
+// 남아 있지만 사이트가 읽지 않는다.
 const EXPECTED_KEYS = {
   tti: Manse.ZODIAC_IDS,
   saju: Manse.SAJU_STEM_IDS,
   zodiac: Manse.STAR_SIGNS.map(s => s.id),
-  tarot: Manse.TAROT.map(t => t.id),
-  blood: Manse.BLOOD_TYPES,
-  mbti: Manse.MBTI_TYPES
+  tarot: Manse.TAROT.map(t => t.id)
 };
 const TYPES = Object.keys(EXPECTED_KEYS);
 

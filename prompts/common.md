@@ -28,18 +28,17 @@
 }
 ```
 
-- `score`: 1~5 **정수**. `keyword`: 2~6자 한 단어/구. `lucky`: 선택 필드(색·숫자).
+- `score`: 1~5 **정수**. `keyword`: 2~6자 한 단어/구.
+  `lucky`: 선택 필드 — `color`는 한국어 색 이름, `number`는 **1~45 정수(0 금지)**.
 - **버킷 ID는 아래 목록과 글자 하나까지 일치**해야 한다. 하나라도 빠지면 그 주기 전체가 폐기된다.
 
-## 버킷 ID 전체 목록 (타입별)
+## 버킷 ID 전체 목록 (운세 4종 · 총 56버킷)
 
 - `tti` (12): rat ox tiger rabbit dragon snake horse sheep monkey rooster dog pig
   (쥐 소 호랑이 토끼 용 뱀 말 양 원숭이 닭 개 돼지 순)
 - `saju` (10): gap eul byeong jeong mu gi gyeong sin im gye (갑 을 병 정 무 기 경 신 임 계)
 - `zodiac` (12): aquarius pisces aries taurus gemini cancer leo virgo libra scorpio sagittarius capricorn
 - `tarot` (22): "0"~"21" (메이저 아르카나 번호. 0=광대 … 21=세계)
-- `blood` (4): A B O AB
-- `mbti` (16): INTJ INTP ENTJ ENTP INFJ INFP ENFJ ENFP ISTJ ISFJ ESTJ ESFJ ISTP ISFP ESTP ESFP
 
 ## 점수·품질 규칙
 

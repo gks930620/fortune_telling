@@ -21,23 +21,26 @@
 
   var SAJU_STEM_IDS = ['gap', 'eul', 'byeong', 'jeong', 'mu', 'gi', 'gyeong', 'sin', 'im', 'gye'];
 
+  var STEMS_HANJA = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+
   var ZODIAC_IDS = ['rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake', 'horse', 'sheep', 'monkey', 'rooster', 'dog', 'pig'];
   var ZODIAC_KO = ['쥐', '소', '호랑이', '토끼', '용', '뱀', '말', '양', '원숭이', '닭', '개', '돼지'];
+  var ZODIAC_EMOJI = ['🐭', '🐮', '🐯', '🐰', '🐲', '🐍', '🐴', '🐑', '🐵', '🐔', '🐶', '🐷'];
 
   // 한국 잡지 관례 날짜 구간 (경계일은 관례에 따라 ±1일 차이가 있을 수 있음)
   var STAR_SIGNS = [
-    { id: 'aquarius',    ko: '물병자리',   from: [1, 20],  to: [2, 18] },
-    { id: 'pisces',      ko: '물고기자리', from: [2, 19],  to: [3, 20] },
-    { id: 'aries',       ko: '양자리',     from: [3, 21],  to: [4, 19] },
-    { id: 'taurus',      ko: '황소자리',   from: [4, 20],  to: [5, 20] },
-    { id: 'gemini',      ko: '쌍둥이자리', from: [5, 21],  to: [6, 21] },
-    { id: 'cancer',      ko: '게자리',     from: [6, 22],  to: [7, 22] },
-    { id: 'leo',         ko: '사자자리',   from: [7, 23],  to: [8, 22] },
-    { id: 'virgo',       ko: '처녀자리',   from: [8, 23],  to: [9, 23] },
-    { id: 'libra',       ko: '천칭자리',   from: [9, 24],  to: [10, 22] },
-    { id: 'scorpio',     ko: '전갈자리',   from: [10, 23], to: [11, 22] },
-    { id: 'sagittarius', ko: '사수자리',   from: [11, 23], to: [12, 24] },
-    { id: 'capricorn',   ko: '염소자리',   from: [12, 25], to: [1, 19] }
+    { id: 'aquarius',    ko: '물병자리',   symbol: '♒', from: [1, 20],  to: [2, 18] },
+    { id: 'pisces',      ko: '물고기자리', symbol: '♓', from: [2, 19],  to: [3, 20] },
+    { id: 'aries',       ko: '양자리',     symbol: '♈', from: [3, 21],  to: [4, 19] },
+    { id: 'taurus',      ko: '황소자리',   symbol: '♉', from: [4, 20],  to: [5, 20] },
+    { id: 'gemini',      ko: '쌍둥이자리', symbol: '♊', from: [5, 21],  to: [6, 21] },
+    { id: 'cancer',      ko: '게자리',     symbol: '♋', from: [6, 22],  to: [7, 22] },
+    { id: 'leo',         ko: '사자자리',   symbol: '♌', from: [7, 23],  to: [8, 22] },
+    { id: 'virgo',       ko: '처녀자리',   symbol: '♍', from: [8, 23],  to: [9, 23] },
+    { id: 'libra',       ko: '천칭자리',   symbol: '♎', from: [9, 24],  to: [10, 22] },
+    { id: 'scorpio',     ko: '전갈자리',   symbol: '♏', from: [10, 23], to: [11, 22] },
+    { id: 'sagittarius', ko: '사수자리',   symbol: '♐', from: [11, 23], to: [12, 24] },
+    { id: 'capricorn',   ko: '염소자리',   symbol: '♑', from: [12, 25], to: [1, 19] }
   ];
 
   var TAROT = [
@@ -63,12 +66,6 @@
     { id: '19', ko: '태양',           en: 'The Sun' },
     { id: '20', ko: '심판',           en: 'Judgement' },
     { id: '21', ko: '세계',           en: 'The World' }
-  ];
-
-  var BLOOD_TYPES = ['A', 'B', 'O', 'AB'];
-  var MBTI_TYPES = [
-    'INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP',
-    'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'
   ];
 
   var WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
@@ -167,6 +164,54 @@
     return map;
   }
 
+  // ---- 화면 표시용 조회 --------------------------------------------------
+
+  /**
+   * 띠 id → 그 띠에 해당하는 출생연도 목록.
+   * 주의: 입춘(2/4) 기준이라 1/1~2/3 출생자는 앞 띠에 속한다. 화면에 그 안내를 함께 띄울 것.
+   */
+  function zodiacYears(id, from, to) {
+    var idx = ZODIAC_IDS.indexOf(id);
+    if (idx < 0) return [];
+    var out = [];
+    for (var y = (from || 1936); y <= (to || 2032); y++) if (mod(y - 4, 12) === idx) out.push(y);
+    return out;
+  }
+
+  /** 띠 id → { id, ko, emoji, index } */
+  function zodiacInfo(id) {
+    var i = ZODIAC_IDS.indexOf(id);
+    if (i < 0) return null;
+    return { id: id, ko: ZODIAC_KO[i], emoji: ZODIAC_EMOJI[i], index: i };
+  }
+
+  /** 별자리 기간 문자열. 예: "5월 21일 ~ 6월 21일" */
+  function starSignRange(sign) {
+    return sign.from[0] + '월 ' + sign.from[1] + '일 ~ ' + sign.to[0] + '월 ' + sign.to[1] + '일';
+  }
+
+  /** 별자리 id → STAR_SIGNS 항목 */
+  function starSignById(id) {
+    for (var i = 0; i < STAR_SIGNS.length; i++) if (STAR_SIGNS[i].id === id) return STAR_SIGNS[i];
+    return null;
+  }
+
+  /** 일간 id → { id, ko, hanja, element, yang }. 예: gap → 갑(甲) 목 양 */
+  function sajuStemInfo(id) {
+    var i = SAJU_STEM_IDS.indexOf(id);
+    if (i < 0) return null;
+    return {
+      id: id, ko: STEMS[i], hanja: STEMS_HANJA[i],
+      element: ELEMENTS[STEM_ELEMENT[i]], yang: i % 2 === 0
+    };
+  }
+
+  /** 타로 id → TAROT 항목 */
+  function tarotById(id) {
+    for (var i = 0; i < TAROT.length; i++) if (TAROT[i].id === id) return TAROT[i];
+    return null;
+  }
+
   // ---- KST 날짜 유틸 ----------------------------------------------------
 
   /** 현재 시각의 KST 날짜 문자열 YYYY-MM-DD */
@@ -188,17 +233,19 @@
   }
 
   return {
-    STEMS: STEMS, BRANCHES: BRANCHES, ELEMENTS: ELEMENTS,
+    STEMS: STEMS, STEMS_HANJA: STEMS_HANJA, BRANCHES: BRANCHES, ELEMENTS: ELEMENTS,
     SAJU_STEM_IDS: SAJU_STEM_IDS,
-    ZODIAC_IDS: ZODIAC_IDS, ZODIAC_KO: ZODIAC_KO,
+    ZODIAC_IDS: ZODIAC_IDS, ZODIAC_KO: ZODIAC_KO, ZODIAC_EMOJI: ZODIAC_EMOJI,
     STAR_SIGNS: STAR_SIGNS, TAROT: TAROT,
-    BLOOD_TYPES: BLOOD_TYPES, MBTI_TYPES: MBTI_TYPES,
     WEEKDAY_KO: WEEKDAY_KO,
     dayGanzhi: dayGanzhi, dayGanzhiIndex: dayGanzhiIndex, ganzhiFromIndex: ganzhiFromIndex,
     yearGanzhi: yearGanzhi, effectiveYear: effectiveYear,
     zodiacFromBirth: zodiacFromBirth, starSignFromBirth: starSignFromBirth,
     dayStemFromBirth: dayStemFromBirth,
     sipseong: sipseong, sipseongMap: sipseongMap,
+    zodiacYears: zodiacYears, zodiacInfo: zodiacInfo,
+    starSignRange: starSignRange, starSignById: starSignById,
+    sajuStemInfo: sajuStemInfo, tarotById: tarotById,
     kstToday: kstToday, parseDate: parseDate, weekdayKo: weekdayKo
   };
 });
