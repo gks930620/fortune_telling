@@ -71,17 +71,71 @@
     return wrap;
   }
 
-  /** 운세 본문(키워드·텍스트·조언·행운) 노드들을 target에 붙인다 */
+  /* 행운의 색 — AI가 쓰는 이름은 자유롭다(9일치에 70가지). 대표색으로 모아
+     실제 색으로 칠한다. 못 찾으면 기본 스타일로 두되 이름은 그대로 보여준다. */
+  var LUCKY_COLORS = {
+    빨강: '#e2453c', 주황: '#f08a24', 노랑: '#f0c02a', 초록: '#2f9e5f',
+    연두: '#8cc63f', 청록: '#159c9c', 하늘색: '#4fb3e8', 파랑: '#3b7dd8',
+    남색: '#2b3f7a', 보라: '#8b5cf6', 분홍: '#ef8fb2', 자주: '#9d2b5f',
+    갈색: '#8b5e3c', 검정: '#2b2833', 흰색: '#f3f1ec', 회색: '#8b8b96',
+    진회색: '#4a4a52', 은색: '#c2c6cf', 금색: '#d4af37', 베이지: '#e3d5bb',
+    카키: '#7d7a4c', 민트: '#57c9a8'
+  };
+  var COLOR_ALIAS = {
+    하양: '흰색', 백색: '흰색', 핑크: '분홍', 로즈: '분홍', 코랄: '분홍',
+    산호: '분홍', 복숭아: '분홍', 살구: '주황', 오렌지: '주황', 황토: '갈색',
+    고동: '갈색', 녹색: '초록', 다홍: '빨강', 진홍: '빨강', 골드: '금색',
+    황금: '금색', 백금: '은색', 은빛: '은색', 은백: '은색', 네이비: '남색',
+    감색: '남색', 감청: '남색', 청색: '파랑', 터콰이즈: '청록', 하늘: '하늘색',
+    라벤더: '보라', 와인: '자주', 버건디: '자주', 크림: '베이지',
+    아이보리: '베이지', 차콜: '진회색', 먹색: '검정', 잿빛: '회색'
+  };
+
+  function luckyHex(name) {
+    if (!name) return null;
+    var n = String(name).trim(), bare = n.replace(/색$/, '');
+    var direct = LUCKY_COLORS[n] || LUCKY_COLORS[bare]
+      || LUCKY_COLORS[COLOR_ALIAS[n]] || LUCKY_COLORS[COLOR_ALIAS[bare]];
+    if (direct) return direct;
+    // "짙은 파랑", "연보라" 같은 변형은 부분 일치로 건진다
+    var k, keys = Object.keys(LUCKY_COLORS);
+    for (k = 0; k < keys.length; k++) if (n.indexOf(keys[k]) >= 0) return LUCKY_COLORS[keys[k]];
+    var ak = Object.keys(COLOR_ALIAS);
+    for (k = 0; k < ak.length; k++) if (n.indexOf(ak[k]) >= 0) return LUCKY_COLORS[COLOR_ALIAS[ak[k]]];
+    return null;
+  }
+
+  /** 배경색 위에서 읽히는 글자색 (밝으면 검정, 어두우면 흰색) */
+  function inkOn(hex) {
+    var r = parseInt(hex.substr(1, 2), 16),
+        g = parseInt(hex.substr(3, 2), 16),
+        b = parseInt(hex.substr(5, 2), 16);
+    return (r * 299 + g * 587 + b * 114) / 1000 > 155 ? '#1f1c26' : '#ffffff';
+  }
+
+  function luckyTag(value, label, hex) {
+    var tag = el('span', 'lucky-tag');
+    tag.appendChild(el('b', null, value));
+    tag.appendChild(el('small', null, label));
+    if (hex) { tag.style.background = hex; tag.style.color = inkOn(hex); }
+    else tag.classList.add('lucky-plain');
+    return tag;
+  }
+
+  /** 운세 본문 — 두괄식: 할 일과 행운이 먼저, 설명은 뒤에 */
   function appendEntry(target, entry) {
     target.appendChild(el('span', 'chip keyword', entry.keyword));
-    target.appendChild(el('p', 'fortune-text', entry.text));
     target.appendChild(el('p', 'fortune-advice', entry.advice));
-    if (entry.lucky && (entry.lucky.color || entry.lucky.number !== undefined)) {
-      var parts = [];
-      if (entry.lucky.color) parts.push('행운의 색 ' + entry.lucky.color);
-      if (entry.lucky.number !== undefined) parts.push('행운의 숫자 ' + entry.lucky.number);
-      target.appendChild(el('div', 'lucky', '🍀 ' + parts.join(' · ')));
+
+    var lucky = entry.lucky;
+    if (lucky && (lucky.color || lucky.number !== undefined)) {
+      var box = el('div', 'lucky');
+      if (lucky.color) box.appendChild(luckyTag(lucky.color, '행운의 색', luckyHex(lucky.color)));
+      if (lucky.number !== undefined) box.appendChild(luckyTag(String(lucky.number), '행운의 숫자', null));
+      target.appendChild(box);
     }
+
+    target.appendChild(el('p', 'fortune-text', entry.text));
   }
 
   /** 버킷 카드 하나 — { icon, title, sub, entry, highlight, badge } */

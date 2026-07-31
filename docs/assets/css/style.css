@@ -202,11 +202,29 @@ button.ghost {
 .b-sub { color: var(--sub); font-size: .82rem; margin: 4px 0 8px; }
 .stars { color: var(--star); letter-spacing: 2px; font-size: .95rem; white-space: nowrap; }
 .stars .off { color: var(--line); }
-.keyword { display: inline-block; margin: 2px 0 6px; }
-.fortune-text { margin: 6px 0; }
-.fortune-advice { font-size: .9rem; color: var(--sub); margin: 0; }
+.keyword { display: inline-block; margin: 2px 0 8px; }
+
+/* 두괄식 — 할 일이 크게 먼저, 설명은 아래 옅게 */
+.fortune-advice {
+  margin: 0; font-size: 1rem; font-weight: 700; color: var(--ink); line-height: 1.5;
+}
 .fortune-advice::before { content: "💡 "; }
-.lucky { font-size: .85rem; color: var(--sub); margin-top: 8px; }
+.fortune-text {
+  margin: 14px 0 0; padding-top: 12px; border-top: 1px dashed var(--line);
+  font-size: .9rem; color: var(--sub);
+}
+
+/* 행운 — 색은 실제 색으로 칠하고, 숫자는 크게 */
+.lucky { display: flex; gap: 8px; margin-top: 14px; }
+.lucky-tag {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 10px 8px; border-radius: 12px;
+  background: var(--accent-soft); color: var(--accent);
+}
+.lucky-tag b { font-size: 1.3rem; font-weight: 800; line-height: 1.25; }
+.lucky-tag small { font-size: .68rem; opacity: .8; font-weight: 600; }
+/* 매칭 실패한 색 이름 — 기본 스타일로 두되 이름은 그대로 보여준다 */
+.lucky-plain { background: var(--bg); color: var(--ink); border: 1px solid var(--line); }
 .placeholder { color: var(--sub); font-size: .92rem; }
 
 /* 타로 */
