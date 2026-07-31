@@ -124,12 +124,24 @@
     var list = $('list');
     var buckets = (state.data.types || {}).tti;
     if (!buckets) return typeMissing(list, '띠');
+
+    // 올해의 띠 — 입춘 기준이라 코드로 계산한다 (1~2월 초는 아직 작년 띠)
+    var d = Manse.parseDate(state.data.date);
+    var yg = d ? Manse.yearGanzhi(d.y, d.m, d.d) : null;
+    var yearTag = $('yearTti');
+    if (yg && yearTag) {
+      yearTag.textContent = yg.effectiveYear + '년은 ' +
+        Manse.zodiacInfo(yg.zodiacId).emoji + ' ' + yg.zodiacKo + '띠 해';
+      yearTag.classList.remove('hidden');
+    }
+
     Manse.ZODIAC_IDS.forEach(function (id) {
       var info = Manse.zodiacInfo(id);
       if (!buckets[id]) return;
       list.appendChild(bucketCard({
         icon: info.emoji,
         title: info.ko + '띠',
+        badge: yg && id === yg.zodiacId ? '올해의 띠' : null,
         sub: ttiYearsText(id),
         entry: buckets[id]
       }));
@@ -259,50 +271,102 @@
     }));
   }
 
+  /* 생년월일 선택 — 년/월/일 셀렉트 세 개.
+     <input type="date">는 브라우저마다 생김새가 다르고, 무엇보다 출생연도를 고르려면
+     달력을 수십 번 넘겨야 한다. 연도를 바로 집을 수 있는 쪽이 낫다. */
+
+  function addOption(sel, value, label) {
+    var o = document.createElement('option');
+    o.value = value;
+    o.textContent = label;
+    sel.appendChild(o);
+  }
+
+  function daysInMonth(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
+
+  function syncDayOptions() {
+    var y = +$('inYear').value, m = +$('inMonth').value, d = $('inDay');
+    var max = (y && m) ? daysInMonth(y, m) : 31;   // 연·월 미선택이면 넉넉히 열어둔다
+    var keep = +d.value;
+    d.textContent = '';
+    addOption(d, '', '일');
+    for (var i = 1; i <= max; i++) addOption(d, i, i);
+    if (keep && keep <= max) d.value = keep;       // 2/30 같은 조합은 자동으로 풀린다
+  }
+
+  function buildBirthPicker(preset) {
+    var y = $('inYear'), m = $('inMonth');
+    var thisYear = Manse.parseDate(Manse.kstToday()).y;
+
+    addOption(y, '', '연도');
+    for (var i = thisYear; i >= 1900; i--) addOption(y, i, i);   // 최근 연도가 위로
+    addOption(m, '', '월');
+    for (var j = 1; j <= 12; j++) addOption(m, j, j);
+
+    y.addEventListener('change', syncDayOptions);
+    m.addEventListener('change', syncDayOptions);
+    syncDayOptions();
+
+    var p = preset ? Manse.parseDate(preset) : null;
+    if (p) { y.value = p.y; m.value = p.m; syncDayOptions(); $('inDay').value = p.d; }
+  }
+
+  function resetBirthPicker() {
+    $('inYear').value = ''; $('inMonth').value = ''; syncDayOptions();
+  }
+
+  /** 세 셀렉트 → 'YYYY-MM-DD'. 미선택·미래 날짜면 null */
+  function readBirthPicker() {
+    var y = +$('inYear').value, m = +$('inMonth').value, d = +$('inDay').value;
+    if (!y || !m || !d || d > daysInMonth(y, m)) return null;
+    var s = y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    return s > Manse.kstToday() ? null : s;
+  }
+
   function showSajuSummary() {
     var p = state.profile;
     var sum = $('profileSummary'), form = $('profileForm');
-    if (!p || !p.birth) { sum.classList.add('hidden'); form.classList.remove('hidden'); return; }
-    var b = Manse.parseDate(p.birth);
+    var b = p && p.birth ? Manse.parseDate(p.birth) : null;
     if (!b) { sum.classList.add('hidden'); form.classList.remove('hidden'); return; }
 
     sum.textContent = '';
     var stem = Manse.dayStemFromBirth(b.y, b.m, b.d);
-    sum.appendChild(el('span', 'chip', p.birth));
-    sum.appendChild(el('span', 'chip', natureOf(stem.id) + ' 기운'));
 
+    var main = el('div', 'summary-main');
+    main.appendChild(el('span', 'summary-date', b.y + '년 ' + b.m + '월 ' + b.d + '일'));
+    main.appendChild(el('span', 'chip', stemEmoji(stem.id) + ' ' + natureOf(stem.id) + ' 기운'));
+    sum.appendChild(main);
+
+    var acts = el('div', 'summary-actions');
     var edit = el('button', 'ghost', '수정');
     edit.addEventListener('click', function () {
       sum.classList.add('hidden'); form.classList.remove('hidden');
     });
-    sum.appendChild(edit);
+    acts.appendChild(edit);
 
     var clear = el('button', 'ghost', '지우기');
     clear.addEventListener('click', function () {
       localStorage.removeItem(PROFILE_KEY);
       state.profile = null;
-      $('inBirth').value = '';
+      resetBirthPicker();
       showSajuSummary();
       renderMySaju();
       renderSajuList();   // '나' 배지도 함께 걷어낸다
     });
-    sum.appendChild(clear);
+    acts.appendChild(clear);
+    sum.appendChild(acts);
 
     sum.classList.remove('hidden');
     form.classList.add('hidden');
   }
 
   function initSaju() {
-    $('inBirth').max = Manse.kstToday();
     state.profile = loadProfile();
-    if (state.profile && state.profile.birth) $('inBirth').value = state.profile.birth;
+    buildBirthPicker(state.profile && state.profile.birth);
 
     $('btnSave').addEventListener('click', function () {
-      var v = $('inBirth').value;
-      if (!v || !Manse.parseDate(v)) {
-        showNotice('생년월일을 정확히 입력해 주세요.');
-        return;
-      }
+      var v = readBirthPicker();
+      if (!v) { showNotice('생년월일을 모두 골라주세요.'); return; }
       state.profile = { birth: v };
       localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profile));
       showSajuSummary();

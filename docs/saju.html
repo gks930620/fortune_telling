@@ -11,14 +11,22 @@ title: 사주 운세
 <p class="help-line"><button class="link-btn" id="btnWhat">사주가 뭔가요? 🔎</button></p>
 
 <section class="profile-card">
-  <h2>생년월일</h2>
-  <div class="profile-form" id="profileForm">
-    <label>태어난 날
-      <input type="date" id="inBirth" min="1900-01-01">
-    </label>
-    <button class="primary" id="btnSave">내 운세 보기</button>
+  <div id="profileForm">
+    <h2>생년월일</h2>
+    <div class="birth-picker">
+      <div class="birth-field year">
+        <select id="inYear" aria-label="태어난 해"></select><span class="unit">년</span>
+      </div>
+      <div class="birth-field">
+        <select id="inMonth" aria-label="태어난 달"></select><span class="unit">월</span>
+      </div>
+      <div class="birth-field">
+        <select id="inDay" aria-label="태어난 날"></select><span class="unit">일</span>
+      </div>
+    </div>
+    <button class="primary block" id="btnSave">내 운세 보기</button>
+    <p class="privacy">🔒 이 기기에만 저장</p>
   </div>
-  <p class="privacy">🔒 이 기기에만 저장</p>
   <div class="profile-summary hidden" id="profileSummary"></div>
 </section>
 
