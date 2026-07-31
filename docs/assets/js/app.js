@@ -44,7 +44,7 @@
         if (!latest.daily || !latest.daily.date) throw new Error('no data');
         return fetchJSON(BASE + 'daily/' + latest.daily.date + '.json').then(function (data) {
           if (latest.daily.date !== today) {
-            showNotice('오늘(' + today + ') 운세가 아직 준비되지 않아 최신(' + latest.daily.date + ') 운세를 보여드려요.');
+            showNotice('오늘 운세가 아직 준비 중이라 ' + latest.daily.date + ' 운세를 보여드리고 있어요.');
           }
           return data;
         });
@@ -61,10 +61,12 @@
 
   // ---- 공통 렌더 ----
 
+  // 빈 별은 ☆ 로 그린다. 같은 ★ 를 색만 흐리게 쓰면 복사·고대비 모드·색약 사용자에게
+  // 전부 5점으로 보인다.
   function starsEl(score) {
     var wrap = el('span', 'stars');
     wrap.appendChild(el('span', null, '★'.repeat(score)));
-    if (score < 5) wrap.appendChild(el('span', 'off', '★'.repeat(5 - score)));
+    if (score < 5) wrap.appendChild(el('span', 'off', '☆'.repeat(5 - score)));
     wrap.setAttribute('aria-label', '5점 만점에 ' + score + '점');
     return wrap;
   }
@@ -158,9 +160,27 @@
     catch (e) { return null; }
   }
 
-  function sajuTitle(id) {
+  /* 사주 용어를 화면에 그대로 노출하지 않는다.
+     일간(壬)·일주(壬申)·십성(편재) 같은 말은 아는 사람에게만 의미가 있고,
+     처음 온 사람에게는 벽이 된다. 오행은 자연물로, 십성은 "오늘 어떤 날인지"로 풀어 쓴다. */
+  var ELEMENT_NATURE = { '목': '나무', '화': '불', '토': '흙', '금': '쇠', '수': '물' };
+
+  var SIPSEONG_PLAIN = {
+    '비견': '내 페이스를 지키면 좋은 날',
+    '겁재': '경쟁심이 붙는 날',
+    '식신': '즐겁게 몰입하는 날',
+    '상관': '말과 재능이 앞서는 날',
+    '편재': '뜻밖의 기회가 들어오는 날',
+    '정재': '착실하게 쌓이는 날',
+    '편관': '압박을 이겨내는 날',
+    '정관': '책임이 인정받는 날',
+    '편인': '직관이 살아나는 날',
+    '정인': '배움과 도움이 들어오는 날'
+  };
+
+  function natureOf(id) {
     var s = Manse.sajuStemInfo(id);
-    return s.ko + '(' + s.hanja + ')' + s.element;
+    return ELEMENT_NATURE[s.element] || s.element;
   }
 
   function renderMySaju() {
@@ -168,7 +188,11 @@
     box.textContent = '';
     var p = state.profile;
     var birth = p && p.birth ? Manse.parseDate(p.birth) : null;
-    if (!birth) return;
+
+    if (!birth) {
+      box.appendChild(el('p', 'empty-hint', '생일을 넣으면 오늘의 운세를 바로 보여드려요.'));
+      return;
+    }
 
     var buckets = (state.data.types || {}).saju;
     if (!buckets) return typeMissing(box, '사주');
@@ -183,8 +207,8 @@
     box.appendChild(el('h2', 'section-title', '나의 오늘'));
     box.appendChild(bucketCard({
       icon: '📜',
-      title: '나의 일간 · ' + sajuTitle(stem.id),
-      sub: (rel ? '오늘은 당신에게 「' + rel + '」의 날 · ' : '') + '태어난 날의 일주 ' + stem.dayPillar,
+      title: natureOf(stem.id) + '의 기운을 타고난 당신',
+      sub: rel && SIPSEONG_PLAIN[rel] ? '오늘은 ' + SIPSEONG_PLAIN[rel] : '',
       entry: entry,
       highlight: true
     }));
@@ -200,7 +224,7 @@
     sum.textContent = '';
     var stem = Manse.dayStemFromBirth(b.y, b.m, b.d);
     sum.appendChild(el('span', 'chip', p.birth));
-    sum.appendChild(el('span', 'chip', '일간 ' + sajuTitle(stem.id)));
+    sum.appendChild(el('span', 'chip', natureOf(stem.id) + ' 기운'));
 
     var edit = el('button', 'ghost', '수정');
     edit.addEventListener('click', function () {
@@ -241,28 +265,6 @@
 
     showSajuSummary();
     renderMySaju();
-
-    // 일간 10종 전체 (접었다 펴기)
-    var btn = $('btnAll'), list = $('list');
-    var buckets = (state.data.types || {}).saju;
-    if (!buckets) { btn.classList.add('hidden'); return; }
-
-    Manse.SAJU_STEM_IDS.forEach(function (id) {
-      if (!buckets[id]) return;
-      var rel = (state.data.context || {}).saju_relations;
-      rel = rel ? rel[id] : null;
-      list.appendChild(bucketCard({
-        icon: '📜',
-        title: sajuTitle(id),
-        sub: rel ? '오늘의 관계: ' + rel : '',
-        entry: buckets[id]
-      }));
-    });
-    btn.addEventListener('click', function () {
-      var open = list.classList.toggle('hidden') === false;
-      btn.setAttribute('aria-expanded', String(open));
-      btn.textContent = open ? '일간 10가지 접기 ▴' : '일간 10가지 전체 보기 ▾';
-    });
   }
 
   // ---- 타로 ----
@@ -326,7 +328,7 @@
     appendEntry(card, entry);
     stage.appendChild(card);
 
-    stage.appendChild(el('p', 'fineprint', '카드는 하루에 한 장이에요. 내일 새벽에 새 해석이 준비됩니다.'));
+    stage.appendChild(el('p', 'fineprint', '카드는 하루에 한 장이에요. 내일 다시 오면 새 카드를 뽑을 수 있어요.'));
 
     var again = el('button', 'ghost', '다시 뽑기');
     again.addEventListener('click', function () {
@@ -348,8 +350,8 @@
       if (ROUTES[PAGE]) ROUTES[PAGE]();
     }).catch(function () {
       var line = $('todayLine');
-      if (line) line.textContent = '아직 발행된 운세 데이터가 없습니다.';
-      showNotice('첫 운세는 자동화가 처음 실행된 다음 날 새벽부터 제공됩니다.');
+      if (line) line.textContent = '운세를 불러오지 못했어요.';
+      showNotice('잠시 후 다시 시도해 주세요.');
     });
   });
 })();

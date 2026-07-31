@@ -114,8 +114,9 @@ button.ghost {
   background: var(--accent-soft); color: var(--accent); border-radius: 999px;
   padding: 4px 12px; font-size: .85rem; font-weight: 700;
 }
-.all-section { margin-top: 26px; }
-.all-section .bucket-grid { margin-top: 14px; }
+.profile-card .lead { color: var(--sub); margin: 0 0 14px; font-size: .95rem; }
+.privacy { color: var(--sub); font-size: .82rem; margin: 12px 0 0; }
+.empty-hint { color: var(--sub); text-align: center; padding: 28px 12px; margin: 0; }
 
 /* 버킷 카드 목록 (띠·별자리·사주) */
 .bucket-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 18px; }

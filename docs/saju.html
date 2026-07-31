@@ -8,36 +8,20 @@ title: 사주 운세
 <p class="today-line" id="todayLine">불러오는 중…</p>
 <div class="notice hidden" id="notice"></div>
 
-<div class="explain">
-  <p><strong>사주는 태어난 날짜로 봅니다.</strong> 그래서 이 운세만 생년월일이 필요해요.</p>
-  <p>
-    사주에서 <strong>'나'를 나타내는 글자를 일간(日干)</strong>이라고 합니다.
-    태어난 날의 천간(갑·을·병·정·무·기·경·신·임·계 열 가지)이 곧 나의 일간이에요.
-    오늘 날짜에도 그날의 천간이 있어서, <strong>내 일간과 오늘의 기운이 어떤 관계인지</strong>를 풀어 오늘 운세를 봅니다.
-  </p>
-  <p class="fineprint">
-    입력한 생년월일은 <strong>이 브라우저에만 저장</strong>되고 어디로도 전송되지 않습니다.
-    태어난 시각은 받지 않는 간이 방식이라, 정통 사주풀이와는 차이가 있어요.
-  </p>
-</div>
-
 <section class="profile-card">
-  <h2>생년월일</h2>
+  <h2>생일을 알려주세요</h2>
+  <p class="lead">태어난 날에 담긴 기운으로 오늘 하루를 봐드려요.</p>
   <div class="profile-form" id="profileForm">
-    <label>태어난 날
+    <label>생년월일
       <input type="date" id="inBirth" min="1900-01-01">
     </label>
-    <button class="primary" id="btnSave">내 사주 보기</button>
+    <button class="primary" id="btnSave">내 운세 보기</button>
   </div>
+  <p class="privacy">🔒 생일은 이 기기에만 저장돼요.</p>
   <div class="profile-summary hidden" id="profileSummary"></div>
 </section>
 
 <div id="myResult"></div>
-
-<section class="all-section">
-  <button class="ghost" id="btnAll" aria-expanded="false">일간 10가지 전체 보기 ▾</button>
-  <div class="bucket-grid hidden" id="list"></div>
-</section>
 
 <script>window.DATA_BASE = "{{ '/data/' | relative_url }}"; window.PAGE = "saju";</script>
 <script src="{{ '/assets/js/manse.js' | relative_url }}"></script>
