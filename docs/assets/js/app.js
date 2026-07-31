@@ -44,7 +44,7 @@
         if (!latest.daily || !latest.daily.date) throw new Error('no data');
         return fetchJSON(BASE + 'daily/' + latest.daily.date + '.json').then(function (data) {
           if (latest.daily.date !== today) {
-            showNotice('오늘 운세가 아직 준비 중이라 ' + latest.daily.date + ' 운세를 보여드리고 있어요.');
+            showNotice('오늘 운세 준비 중 · ' + latest.daily.date + ' 운세 표시 중');
           }
           return data;
         });
@@ -110,8 +110,7 @@
 
   function typeMissing(container, label) {
     container.textContent = '';
-    container.appendChild(el('p', 'placeholder',
-      '오늘은 ' + label + ' 운세가 준비되지 못했어요. 내일 새벽에 다시 만나요.'));
+    container.appendChild(el('p', 'placeholder', '오늘 ' + label + ' 운세 준비 중'));
   }
 
   // ---- 띠 ----
@@ -239,7 +238,7 @@
     var birth = p && p.birth ? Manse.parseDate(p.birth) : null;
 
     if (!birth) {
-      box.appendChild(el('p', 'empty-hint', '생일을 넣으면 오늘의 운세를 바로 보여드려요.'));
+      box.appendChild(el('p', 'empty-hint', '생년월일 입력 → 내 운세'));
       return;
     }
 
@@ -311,13 +310,13 @@
       renderSajuList();
     });
 
-    wireModal();
     showSajuSummary();
     renderMySaju();
     renderSajuList();
   }
 
-  /* "사주가 뭔가요?" 팝업 — 오늘 운세를 보는 흐름을 막지 않도록 기본은 숨김이다.
+  /* 설명 팝업 — 네 페이지가 같은 구조를 쓴다(버튼 #btnWhat, 다이얼로그 #whatModal).
+     운세를 보러 온 흐름을 막지 않도록 기본은 숨김이고, 궁금한 사람만 연다.
      <dialog>을 쓰면 ESC 닫기와 포커스 가둠을 브라우저가 처리해 준다. */
   function wireModal() {
     var modal = $('whatModal'), open = $('btnWhat'), close = $('btnClose');
@@ -356,7 +355,7 @@
 
   function showDeck(stage) {
     stage.textContent = '';
-    stage.appendChild(el('p', 'deck-guide', '마음이 가는 카드를 한 장 골라주세요.'));
+    stage.appendChild(el('p', 'deck-guide', '마음이 가는 카드 한 장'));
 
     var deck = el('div', 'tarot-deck');
     // 위치와 카드의 대응은 뽑는 순간마다 새로 섞인다
@@ -398,7 +397,7 @@
     appendEntry(card, entry);
     stage.appendChild(card);
 
-    stage.appendChild(el('p', 'fineprint', '카드는 하루에 한 장이에요. 내일 다시 오면 새 카드를 뽑을 수 있어요.'));
+    stage.appendChild(el('p', 'fineprint', '하루 한 장 · 내일 새 카드'));
 
     var again = el('button', 'ghost', '다시 뽑기');
     again.addEventListener('click', function () {
@@ -414,6 +413,7 @@
   var ROUTES = { tti: initTti, zodiac: initZodiac, saju: initSaju, tarot: initTarot };
 
   document.addEventListener('DOMContentLoaded', function () {
+    wireModal();   // 데이터 로드와 무관하게 항상 열 수 있어야 한다
     loadData().then(function (data) {
       state.data = data;
       renderTodayLine();

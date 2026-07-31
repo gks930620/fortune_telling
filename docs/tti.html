@@ -8,12 +8,30 @@ title: 띠 운세
 <p class="today-line" id="todayLine">불러오는 중…</p>
 <div class="notice hidden" id="notice"></div>
 
-<p class="page-desc">
-  태어난 해로 내 띠를 찾아보세요.
-  <br><small>1월 1일~2월 3일에 태어났다면 한 해 앞 띠로 봐요.</small>
+<p class="help-line">
+  <span class="tag">1/1~2/3 출생 → 앞 띠</span>
+  <button class="link-btn" id="btnWhat">띠는 어떻게 정해지나요? 🔎</button>
 </p>
 
 <div class="bucket-grid" id="list"></div>
+
+<dialog class="modal" id="whatModal" aria-labelledby="whatTitle">
+  <button class="modal-close" id="btnClose" aria-label="닫기">✕</button>
+  <h2 id="whatTitle">띠는 어떻게 정해지나요?</h2>
+
+  <ul class="keypoints">
+    <li>태어난 <b>해</b>의 동물</li>
+    <li>12가지 · <b>12년에 한 바퀴</b></li>
+    <li>기준일 = <b>입춘(2월 4일)</b><span class="k-note">1월 1일 ~ 2월 3일 출생은 앞 띠</span></li>
+  </ul>
+
+  <p class="modal-point"><b>왜 1월이 아니라 2월?</b><br>옛 달력의 새해 = 봄이 시작되는 입춘</p>
+
+  <ul class="keypoints">
+    <li>띠 = 태어난 <b>해</b> · 12가지</li>
+    <li>사주 = 태어난 <b>날</b> · 10가지</li>
+  </ul>
+</dialog>
 
 <script>window.DATA_BASE = "{{ '/data/' | relative_url }}"; window.PAGE = "tti";</script>
 <script src="{{ '/assets/js/manse.js' | relative_url }}"></script>

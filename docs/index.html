@@ -5,35 +5,33 @@ layout: default
 <p class="today-line" id="todayLine">불러오는 중…</p>
 <div class="notice hidden" id="notice"></div>
 
-<p class="page-desc">오늘은 어떤 운세가 궁금하세요?</p>
-
 <div class="menu-grid">
   <a class="menu-card" href="{{ '/saju/' | relative_url }}">
     <span class="menu-icon">📜</span>
     <span class="menu-name">사주 운세</span>
-    <span class="menu-desc">태어난 날로 보는 나의 오늘</span>
+    <span class="menu-desc">생년월일 · 10가지 기운</span>
   </a>
 
   <a class="menu-card" href="{{ '/tti/' | relative_url }}">
     <span class="menu-icon">🐲</span>
     <span class="menu-name">띠 운세</span>
-    <span class="menu-desc">열두 띠 오늘의 운세</span>
+    <span class="menu-desc">12띠 전체</span>
   </a>
 
   <a class="menu-card" href="{{ '/zodiac/' | relative_url }}">
     <span class="menu-icon">✨</span>
     <span class="menu-name">별자리 운세</span>
-    <span class="menu-desc">열두 별자리 오늘의 운세</span>
+    <span class="menu-desc">12별자리 전체</span>
   </a>
 
   <a class="menu-card" href="{{ '/tarot/' | relative_url }}">
     <span class="menu-icon">🃏</span>
     <span class="menu-name">오늘의 타로</span>
-    <span class="menu-desc">카드 한 장으로 보는 오늘</span>
+    <span class="menu-desc">22장 중 한 장</span>
   </a>
 </div>
 
-<p style="margin-top:26px"><a href="{{ '/reports/' | relative_url }}">📚 전체 리포트 보러 가기 →</a></p>
+<p style="margin-top:26px"><a href="{{ '/reports/' | relative_url }}">📚 지난 운세 모아보기 →</a></p>
 
 <script>window.DATA_BASE = "{{ '/data/' | relative_url }}"; window.PAGE = "home";</script>
 <script src="{{ '/assets/js/manse.js' | relative_url }}"></script>

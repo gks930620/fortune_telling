@@ -8,15 +8,29 @@ title: 오늘의 타로
 <p class="today-line" id="todayLine">불러오는 중…</p>
 <div class="notice hidden" id="notice"></div>
 
-<div class="explain">
-  <ol class="how">
-    <li>오늘 궁금한 것을 마음속에 하나 떠올려요. 막연해도 괜찮아요.</li>
-    <li>뒤집힌 카드 중 <strong>마음이 가는 한 장</strong>을 고르세요.</li>
-    <li>고른 카드가 오늘의 답이에요.</li>
-  </ol>
-</div>
+<p class="help-line">
+  <span class="tag">하루 한 장</span>
+  <button class="link-btn" id="btnWhat">타로는 어떻게 보나요? 🔎</button>
+</p>
 
 <section class="tarot-stage" id="stage"></section>
+
+<dialog class="modal" id="whatModal" aria-labelledby="whatTitle">
+  <button class="modal-close" id="btnClose" aria-label="닫기">✕</button>
+  <h2 id="whatTitle">타로는 어떻게 보나요?</h2>
+
+  <ol class="how">
+    <li>궁금한 것 하나 떠올리기<span class="k-note">막연해도 괜찮아요</span></li>
+    <li>마음이 가는 카드 한 장</li>
+    <li>그 카드가 오늘의 답</li>
+  </ol>
+
+  <ul class="keypoints">
+    <li>쓰는 카드 = <b>메이저 아르카나 22장</b><span class="k-note">타로의 큰 줄기</span></li>
+    <li>모두 <b>정방향</b>으로 봄</li>
+    <li><b>하루 한 장</b><span class="k-note">내일 새 카드</span></li>
+  </ul>
+</dialog>
 
 <script>window.DATA_BASE = "{{ '/data/' | relative_url }}"; window.PAGE = "tarot";</script>
 <script src="{{ '/assets/js/manse.js' | relative_url }}"></script>

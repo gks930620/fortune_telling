@@ -80,14 +80,24 @@ a:hover { text-decoration: underline; }
 .menu-name { font-weight: 800; font-size: 1.05rem; }
 .menu-desc { color: var(--sub); font-size: .88rem; }
 
-/* 설명 블록 */
-.explain {
-  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-  padding: 16px 20px; margin: 18px 0;
+/* 핵심만 짚는 목록 — 문장 대신 키워드로 읽히게 한다 */
+.keypoints { list-style: none; padding: 0; margin: 14px 0; }
+.keypoints li {
+  padding: 9px 0; border-bottom: 1px dashed var(--line);
+  font-size: .95rem;
 }
-.explain p { margin: 8px 0; }
-.explain .how { margin: 8px 0 8px 0; padding-left: 22px; }
-.explain .how li { margin: 4px 0; }
+.keypoints li:last-child { border-bottom: 0; }
+.keypoints b { color: var(--accent); }
+.k-note { display: block; color: var(--sub); font-size: .82rem; margin-top: 3px; }
+.how { margin: 14px 0; padding-left: 20px; }
+.how li { margin: 8px 0; font-size: .95rem; }
+
+/* 한 줄 태그 (예: "하루 한 장") */
+.tag {
+  display: inline-block; background: var(--accent-soft); color: var(--accent);
+  border-radius: 6px; padding: 2px 9px; font-size: .8rem; font-weight: 700;
+  margin-right: 8px;
+}
 
 /* 프로필 입력 */
 .profile-card {
