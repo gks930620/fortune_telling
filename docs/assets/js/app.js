@@ -84,12 +84,13 @@
     }
   }
 
-  /** 버킷 카드 하나 — { icon, title, sub, entry, highlight } */
+  /** 버킷 카드 하나 — { icon, title, sub, entry, highlight, badge } */
   function bucketCard(o) {
     var card = el('article', 'bucket-card' + (o.highlight ? ' highlight' : ''));
     var head = el('header', 'b-head');
     if (o.icon) head.appendChild(el('span', 'b-icon', o.icon));
     head.appendChild(el('span', 'b-title', o.title));
+    if (o.badge) head.appendChild(el('span', 'b-badge', o.badge));
     head.appendChild(starsEl(o.entry.score));
     card.appendChild(head);
     if (o.sub) card.appendChild(el('div', 'b-sub', o.sub));
@@ -178,9 +179,57 @@
     '정인': '배움과 도움이 들어오는 날'
   };
 
+  // 열 가지 일간을 자연물로 — 화면에서 서로 구분되게 하는 용도
+  var STEM_NATURE = {
+    gap: '큰 나무', eul: '풀과 덩굴', byeong: '태양', jeong: '촛불', mu: '산',
+    gi: '밭흙', gyeong: '무쇠', sin: '보석', im: '바다', gye: '이슬'
+  };
+  var ELEMENT_EMOJI = { '목': '🌳', '화': '🔥', '토': '⛰️', '금': '🪙', '수': '💧' };
+
   function natureOf(id) {
     var s = Manse.sajuStemInfo(id);
     return ELEMENT_NATURE[s.element] || s.element;
+  }
+
+  /** 목록용 라벨. 예: 임(壬) 바다 */
+  function stemLabel(id) {
+    var s = Manse.sajuStemInfo(id);
+    return s.ko + '(' + s.hanja + ') ' + STEM_NATURE[id];
+  }
+
+  function stemEmoji(id) {
+    return ELEMENT_EMOJI[Manse.sajuStemInfo(id).element] || '📜';
+  }
+
+  function todayRelation(id) {
+    var rel = (state.data.context || {}).saju_relations;
+    rel = rel ? rel[id] : null;
+    return rel && SIPSEONG_PLAIN[rel] ? '오늘은 ' + SIPSEONG_PLAIN[rel] : '';
+  }
+
+  /** 열 가지 일간 전체 — 내 것에는 '나' 배지를 단다 */
+  function renderSajuList() {
+    var list = $('list');
+    if (!list) return;
+    list.textContent = '';
+    var buckets = (state.data.types || {}).saju;
+    if (!buckets) return typeMissing(list, '사주');
+
+    var p = state.profile;
+    var birth = p && p.birth ? Manse.parseDate(p.birth) : null;
+    var mine = birth ? Manse.dayStemFromBirth(birth.y, birth.m, birth.d).id : null;
+
+    Manse.SAJU_STEM_IDS.forEach(function (id) {
+      if (!buckets[id]) return;
+      list.appendChild(bucketCard({
+        icon: stemEmoji(id),
+        title: stemLabel(id),
+        badge: id === mine ? '나' : null,
+        sub: todayRelation(id),
+        entry: buckets[id],
+        highlight: id === mine
+      }));
+    });
   }
 
   function renderMySaju() {
@@ -201,14 +250,11 @@
     var entry = buckets[stem.id];
     if (!entry) return typeMissing(box, '사주');
 
-    var rel = (state.data.context || {}).saju_relations;
-    rel = rel ? rel[stem.id] : null;
-
     box.appendChild(el('h2', 'section-title', '나의 오늘'));
     box.appendChild(bucketCard({
       icon: '📜',
       title: natureOf(stem.id) + '의 기운을 타고난 당신',
-      sub: rel && SIPSEONG_PLAIN[rel] ? '오늘은 ' + SIPSEONG_PLAIN[rel] : '',
+      sub: todayRelation(stem.id),
       entry: entry,
       highlight: true
     }));
@@ -237,8 +283,9 @@
       localStorage.removeItem(PROFILE_KEY);
       state.profile = null;
       $('inBirth').value = '';
-      $('myResult').textContent = '';
       showSajuSummary();
+      renderMySaju();
+      renderSajuList();   // '나' 배지도 함께 걷어낸다
     });
     sum.appendChild(clear);
 
@@ -261,10 +308,33 @@
       localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profile));
       showSajuSummary();
       renderMySaju();
+      renderSajuList();
     });
 
+    wireModal();
     showSajuSummary();
     renderMySaju();
+    renderSajuList();
+  }
+
+  /* "사주가 뭔가요?" 팝업 — 오늘 운세를 보는 흐름을 막지 않도록 기본은 숨김이다.
+     <dialog>을 쓰면 ESC 닫기와 포커스 가둠을 브라우저가 처리해 준다. */
+  function wireModal() {
+    var modal = $('whatModal'), open = $('btnWhat'), close = $('btnClose');
+    if (!modal || !open) return;
+
+    open.addEventListener('click', function () {
+      if (modal.showModal) modal.showModal();
+      else modal.setAttribute('open', '');       // 아주 오래된 브라우저 폴백
+    });
+    if (close) close.addEventListener('click', function () {
+      if (modal.close) modal.close();
+      else modal.removeAttribute('open');
+    });
+    // 바깥 여백을 눌러도 닫히게
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal && modal.close) modal.close();
+    });
   }
 
   // ---- 타로 ----

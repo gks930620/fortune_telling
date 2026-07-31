@@ -8,6 +8,8 @@ title: 사주 운세
 <p class="today-line" id="todayLine">불러오는 중…</p>
 <div class="notice hidden" id="notice"></div>
 
+<p class="help-line"><button class="link-btn" id="btnWhat">사주가 뭔가요? 🔎</button></p>
+
 <section class="profile-card">
   <h2>생일을 알려주세요</h2>
   <p class="lead">태어난 날에 담긴 기운으로 오늘 하루를 봐드려요.</p>
@@ -22,6 +24,42 @@ title: 사주 운세
 </section>
 
 <div id="myResult"></div>
+
+<h2 class="section-title">열 가지 기운의 오늘</h2>
+<p class="page-desc">사주에서는 사람을 열 가지 기운으로 나눠 봐요.</p>
+<div class="bucket-grid" id="list"></div>
+
+<dialog class="modal" id="whatModal" aria-labelledby="whatTitle">
+  <button class="modal-close" id="btnClose" aria-label="닫기">✕</button>
+  <h2 id="whatTitle">사주가 뭔가요?</h2>
+
+  <p><strong>사주(四柱)</strong>는 '네 기둥'이라는 뜻이에요.
+  태어난 <strong>연·월·일·시</strong>를 각각 두 글자로 적으면 여덟 글자가 나와요.
+  '팔자'라는 말이 여기서 왔어요.</p>
+
+  <p>그중 태어난 <strong>'날'을 나타내는 글자가 바로 나 자신</strong>이에요.
+  모두 열 가지가 있고, 생일만 알면 정해져요.</p>
+
+  <table class="modal-table">
+    <thead><tr><th>기운</th><th>큰 쪽</th><th>작은 쪽</th></tr></thead>
+    <tbody>
+      <tr><td>🌳 나무</td><td>갑(甲) 큰 나무</td><td>을(乙) 풀·덩굴</td></tr>
+      <tr><td>🔥 불</td><td>병(丙) 태양</td><td>정(丁) 촛불</td></tr>
+      <tr><td>⛰️ 흙</td><td>무(戊) 산</td><td>기(己) 밭흙</td></tr>
+      <tr><td>🪙 쇠</td><td>경(庚) 무쇠</td><td>신(辛) 보석</td></tr>
+      <tr><td>💧 물</td><td>임(壬) 바다</td><td>계(癸) 이슬</td></tr>
+    </tbody>
+  </table>
+
+  <p>같은 물이라도 <strong>바다와 이슬</strong>은 성격이 다르죠.
+  열 가지가 저마다 다른 결을 가져요.</p>
+
+  <p class="modal-point">오늘의 운세는 <strong>내 글자와 오늘의 글자가 만나</strong> 정해져요.
+  돈·일·공부·관계 중에서 오늘 어느 쪽이 움직이는지가 여기서 나와요.</p>
+
+  <p class="fineprint">띠가 태어난 <strong>해</strong>로 나누는 거라면, 이건 태어난 <strong>날</strong>로 나눠요.
+  그래서 띠보다 더 잘게 나뉘어요.</p>
+</dialog>
 
 <script>window.DATA_BASE = "{{ '/data/' | relative_url }}"; window.PAGE = "saju";</script>
 <script src="{{ '/assets/js/manse.js' | relative_url }}"></script>
