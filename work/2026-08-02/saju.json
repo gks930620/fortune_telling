@@ -1,0 +1,78 @@
+{
+  "type": "saju",
+  "date": "2026-08-02",
+  "periods": {
+    "daily": {
+      "gap": {
+        "score": 4,
+        "keyword": "뜻밖의 기회",
+        "text": "생각지도 못한 제안이 툭 들어올 수 있는 날이에요.",
+        "advice": "메일함이나 문자 알림을 한번 더 챙겨보세요",
+        "lucky": { "color": "금색", "number": 7 }
+      },
+      "eul": {
+        "score": 5,
+        "keyword": "안정된 결실",
+        "text": "차곡차곡 쌓아온 게 오늘 슬쩍 티가 나는 날이에요.",
+        "advice": "미뤄뒀던 통장이나 가계부를 한번 열어보세요",
+        "lucky": { "color": "초록", "number": 3 }
+      },
+      "byeong": {
+        "score": 4,
+        "keyword": "즐거운 몰입",
+        "text": "손대는 일마다 술술 풀리는 느낌이 드는 날이에요.",
+        "advice": "좋아하는 음식으로 점심을 챙겨 드세요",
+        "lucky": { "color": "주황", "number": 9 }
+      },
+      "jeong": {
+        "score": 2,
+        "keyword": "말조심",
+        "text": "말이 평소보다 날카롭게 나갈 수 있는 날이에요.",
+        "advice": "중요한 말은 보내기 전에 한 번 더 읽어보세요",
+        "lucky": { "color": "회색", "number": 4 }
+      },
+      "mu": {
+        "score": 3,
+        "keyword": "내 페이스",
+        "text": "남 눈치보다 내 속도대로 움직이고 싶어지는 날이에요.",
+        "advice": "오늘 할 일을 나만의 순서로 다시 짜보세요",
+        "lucky": { "color": "파랑", "number": 6 }
+      },
+      "gi": {
+        "score": 2,
+        "keyword": "지출 주의",
+        "text": "지갑이 자꾸 열리려는 걸 참아야 하는 날이에요.",
+        "advice": "큰 결제는 하루만 미루고 다시 생각해보세요",
+        "lucky": { "color": "갈색", "number": 2 }
+      },
+      "gyeong": {
+        "score": 3,
+        "keyword": "혼자만의 시간",
+        "text": "혼자 생각할 시간이 필요하다 느껴지는 날이에요.",
+        "advice": "잠깐 걸으면서 머릿속을 정리해보세요",
+        "lucky": { "color": "남색", "number": 11 }
+      },
+      "sin": {
+        "score": 5,
+        "keyword": "든든한 도움",
+        "text": "누군가 슬쩍 도와주는 손길을 만날 수 있는 날이에요.",
+        "advice": "궁금한 건 오늘 주저 말고 물어보세요",
+        "lucky": { "color": "하늘색", "number": 5 }
+      },
+      "im": {
+        "score": 1,
+        "keyword": "숨 고르기",
+        "text": "여기저기서 재촉이 들어와 어깨가 무거운 날이에요.",
+        "advice": "일정 하나는 과감히 뒤로 미뤄보세요",
+        "lucky": { "color": "검정", "number": 1 }
+      },
+      "gye": {
+        "score": 4,
+        "keyword": "책임과 인정",
+        "text": "맡은 일을 제대로 해내면 인정받는 날이에요.",
+        "advice": "오늘 마감을 1시간 앞당겨 끝내보세요",
+        "lucky": { "color": "보라", "number": 8 }
+      }
+    }
+  }
+}

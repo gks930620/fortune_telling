@@ -1,0 +1,92 @@
+{
+  "type": "zodiac",
+  "date": "2026-08-02",
+  "periods": {
+    "daily": {
+      "aquarius": {
+        "score": 4,
+        "keyword": "번뜩임",
+        "text": "번뜩이는 아이디어가 회의 분위기를 바꿔요. 남들과 다른 시각이 오늘의 무기예요.",
+        "advice": "떠오른 아이디어를 메모장에 바로 적어두세요.",
+        "lucky": { "color": "하늘색", "number": 7 }
+      },
+      "pisces": {
+        "score": 3,
+        "keyword": "공감",
+        "text": "누군가의 고민을 들어주다 보면 뜻밖의 위로를 받는 하루예요.",
+        "advice": "먼저 안부 문자를 보내보세요.",
+        "lucky": { "color": "민트", "number": 9 }
+      },
+      "aries": {
+        "score": 5,
+        "keyword": "추진력",
+        "text": "미뤄뒀던 일을 밀어붙이면 예상보다 빨리 끝나요. 추진력이 최고조인 날이에요.",
+        "advice": "가장 어려운 일부터 먼저 처리하세요.",
+        "lucky": { "color": "빨강", "number": 1 }
+      },
+      "taurus": {
+        "score": 2,
+        "keyword": "지출주의",
+        "text": "충동구매 욕구가 스멀스멀 올라와요. 장바구니에 담아두고 하루만 참아보세요.",
+        "advice": "결제 전에 24시간만 미뤄보세요.",
+        "lucky": { "color": "갈색", "number": 6 }
+      },
+      "gemini": {
+        "score": 4,
+        "keyword": "말솜씨",
+        "text": "가벼운 농담 한마디가 어색한 분위기를 풀어줘요. 말주변이 빛나는 날이에요.",
+        "advice": "먼저 말을 걸어 분위기를 이끌어보세요.",
+        "lucky": { "color": "노랑", "number": 5 }
+      },
+      "cancer": {
+        "score": 3,
+        "keyword": "자기돌봄",
+        "text": "몸이 보내는 신호를 무시하지 마세요. 오늘은 나를 먼저 챙기는 게 우선이에요.",
+        "advice": "물 한 잔 더 마시고 일찍 쉬세요.",
+        "lucky": { "color": "은색", "number": 2 }
+      },
+      "leo": {
+        "score": 5,
+        "keyword": "존재감",
+        "text": "자신감 있게 나선 만큼 주목받아요. 무대의 중심에 서기 딱 좋은 날이에요.",
+        "advice": "하고 싶은 말을 당당하게 꺼내보세요.",
+        "lucky": { "color": "금색", "number": 8 }
+      },
+      "virgo": {
+        "score": 2,
+        "keyword": "정리정돈",
+        "text": "책상 위 서류더미가 집중을 방해해요. 정리부터 하면 일이 술술 풀려요.",
+        "advice": "책상 위부터 5분만 정리해보세요.",
+        "lucky": { "color": "흰색", "number": 4 }
+      },
+      "libra": {
+        "score": 4,
+        "keyword": "균형",
+        "text": "이쪽저쪽 눈치 보다 지칠 수 있어요. 내 마음의 무게도 함께 재보세요.",
+        "advice": "오늘은 내 의견부터 먼저 말해보세요.",
+        "lucky": { "color": "분홍", "number": 11 }
+      },
+      "scorpio": {
+        "score": 4,
+        "keyword": "몰입",
+        "text": "한 가지에 몰두하면 놀라운 집중력이 발휘돼요. 깊이 파고들 타이밍이에요.",
+        "advice": "방해 요소를 잠시 꺼두고 몰입하세요.",
+        "lucky": { "color": "자주", "number": 13 }
+      },
+      "sagittarius": {
+        "score": 1,
+        "keyword": "과욕주의",
+        "text": "욕심이 앞서 무리한 지출로 이어질 수 있어요. 계획한 예산 안에서 즐기세요.",
+        "advice": "지출 전 예산표를 한 번 더 확인하세요.",
+        "lucky": { "color": "주황", "number": 3 }
+      },
+      "capricorn": {
+        "score": 3,
+        "keyword": "책임감",
+        "text": "맡은 몫을 묵묵히 해내는 모습이 신뢰를 쌓아요. 꾸준함이 오늘의 힘이에요.",
+        "advice": "오늘의 할 일 목록부터 체크하세요.",
+        "lucky": { "color": "남색", "number": 10 }
+      }
+    }
+  }
+}
