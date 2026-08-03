@@ -1,0 +1,92 @@
+{
+  "type": "zodiac",
+  "date": "2026-08-04",
+  "periods": {
+    "daily": {
+      "aries": {
+        "score": 5,
+        "keyword": "질주",
+        "text": "미루던 일을 오늘 밀어붙이면 예상보다 빨리 끝나요. 추진력이 살아나는 날입니다.",
+        "advice": "미루던 일 지금 바로 시작하기",
+        "lucky": { "color": "빨강", "number": 9 }
+      },
+      "taurus": {
+        "score": 4,
+        "keyword": "안정",
+        "text": "돈 관리를 꼼꼼히 챙기면 마음의 여유가 생겨요. 흙처럼 단단한 하루예요.",
+        "advice": "오늘 지출 내역 한번 점검하기",
+        "lucky": { "color": "갈색", "number": 6 }
+      },
+      "gemini": {
+        "score": 3,
+        "keyword": "대화",
+        "text": "말 한마디로 오해가 생기기 쉬우니 확인 한 번 더 거치는 게 좋아요.",
+        "advice": "문자보다 전화로 한 번 더 확인하기",
+        "lucky": { "color": "하늘색", "number": 15 }
+      },
+      "cancer": {
+        "score": 2,
+        "keyword": "휴식",
+        "text": "몸이 평소보다 무겁게 느껴질 수 있어요. 오늘은 스스로를 돌보는 데 집중하세요.",
+        "advice": "평소보다 30분 일찍 잠자리 들기",
+        "lucky": { "color": "은색", "number": 2 }
+      },
+      "leo": {
+        "score": 5,
+        "keyword": "존재감",
+        "text": "자신감 있게 나서면 자연스레 주목받는 하루예요. 표현할수록 빛나요.",
+        "advice": "회의나 모임에서 먼저 의견 내보기",
+        "lucky": { "color": "금색", "number": 23 }
+      },
+      "virgo": {
+        "score": 4,
+        "keyword": "정돈",
+        "text": "밀린 서류나 파일을 정리하면 막혀 있던 일이 술술 풀리는 흐름이에요.",
+        "advice": "책상 위부터 5분만 정리하기",
+        "lucky": { "color": "베이지", "number": 11 }
+      },
+      "libra": {
+        "score": 3,
+        "keyword": "균형",
+        "text": "한쪽으로 기울어진 관계가 있다면 오늘 살짝 맞춰보면 편안해져요.",
+        "advice": "미뤄둔 답장 하나 보내기",
+        "lucky": { "color": "분홍", "number": 18 }
+      },
+      "scorpio": {
+        "score": 2,
+        "keyword": "신중",
+        "text": "성급한 결정은 후회를 부를 수 있어요. 오늘은 지켜보는 쪽이 안전해요.",
+        "advice": "큰 지출은 하루만 미뤄보기",
+        "lucky": { "color": "검정", "number": 4 }
+      },
+      "sagittarius": {
+        "score": 5,
+        "keyword": "확장",
+        "text": "새로운 정보나 배움이 뜻밖의 좋은 기회로 이어지는 날이에요.",
+        "advice": "관심 있던 강의나 책 하나 찾아보기",
+        "lucky": { "color": "주황", "number": 27 }
+      },
+      "capricorn": {
+        "score": 4,
+        "keyword": "성실",
+        "text": "꾸준히 쌓아온 노력이 오늘 조금씩 인정받는 흐름이 이어져요.",
+        "advice": "오늘 할 일 목록부터 체크하기",
+        "lucky": { "color": "회색", "number": 8 }
+      },
+      "aquarius": {
+        "score": 1,
+        "keyword": "충동주의",
+        "text": "갑작스런 계획 변경은 혼선을 부를 수 있어요. 오늘은 정해둔 대로 움직이세요.",
+        "advice": "새 아이디어는 실행 대신 메모만 해두기",
+        "lucky": { "color": "남색", "number": 5 }
+      },
+      "pisces": {
+        "score": 3,
+        "keyword": "공감",
+        "text": "상대의 마음을 한 번 더 살피면 관계가 훨씬 부드러워지는 하루예요.",
+        "advice": "고마운 사람에게 한마디 전해보기",
+        "lucky": { "color": "보라", "number": 14 }
+      }
+    }
+  }
+}
