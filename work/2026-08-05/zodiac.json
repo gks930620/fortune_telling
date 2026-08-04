@@ -1,0 +1,92 @@
+{
+  "type": "zodiac",
+  "date": "2026-08-05",
+  "periods": {
+    "daily": {
+      "aquarius": {
+        "score": 3,
+        "keyword": "실마리",
+        "text": "생각이 자꾸 엉키지만 뜻밖의 정보 하나가 실마리를 던져줘요.",
+        "advice": "궁금한 건 검색 한 번 더 해보세요",
+        "lucky": { "color": "하늘색", "number": 7 }
+      },
+      "pisces": {
+        "score": 5,
+        "keyword": "끌림",
+        "text": "이유 없이 끌리는 선택지가 있다면 이번엔 따라가도 좋아요.",
+        "advice": "점심 메뉴는 끌리는 대로 골라봅시다",
+        "lucky": { "color": "민트", "number": 3 }
+      },
+      "aries": {
+        "score": 1,
+        "keyword": "제동주의",
+        "text": "의욕은 넘치는데 자꾸 브레이크가 걸려요. 오늘은 힘 빼고 가야 해요.",
+        "advice": "중요한 결정은 내일로 미뤄두면 됩니다",
+        "lucky": { "color": "빨강", "number": 15 }
+      },
+      "taurus": {
+        "score": 2,
+        "keyword": "헛헛함",
+        "text": "들인 노력에 비해 돌아오는 게 더뎌서 괜히 헛헛한 날이에요.",
+        "advice": "오늘 큰 결정 대신 다음 계획부터 짜보는 건 어때요?",
+        "lucky": { "color": "베이지", "number": 22 }
+      },
+      "gemini": {
+        "score": 3,
+        "keyword": "우연한힌트",
+        "text": "말이 꼬이기 쉽지만 우연히 들은 한마디가 도움이 돼요.",
+        "advice": "회의 전에 할 말 세 줄로 정리해두기",
+        "lucky": { "color": "노랑", "number": 5 }
+      },
+      "cancer": {
+        "score": 5,
+        "keyword": "포근한보답",
+        "text": "집이든 가족이든 오늘은 마음 쓰는 만큼 그대로 돌아와요.",
+        "advice": "가족에게 안부 전화 한 통 걸어보세요",
+        "lucky": { "color": "은색", "number": 11 }
+      },
+      "leo": {
+        "score": 1,
+        "keyword": "김빠짐주의",
+        "text": "무대에 서고 싶은데 자꾸 누가 스포트라이트를 가려가는 기분이에요.",
+        "advice": "오늘은 나서기보다 한 발 물러나 지켜보기",
+        "lucky": { "color": "주황", "number": 19 }
+      },
+      "virgo": {
+        "score": 2,
+        "keyword": "속도늦춤",
+        "text": "할 일은 쌓이는데 손이 느려지는 날, 무리하면 실수만 늘어요.",
+        "advice": "오늘 할 일 목록에서 하나는 내일로 넘겨봅시다",
+        "lucky": { "color": "카키", "number": 8 }
+      },
+      "libra": {
+        "score": 3,
+        "keyword": "뜻밖의제안",
+        "text": "의견 충돌이 생겨도 뜻밖의 제안이 대화를 다시 이어줘요.",
+        "advice": "먼저 화해의 말 한마디 건네보세요",
+        "lucky": { "color": "분홍", "number": 27 }
+      },
+      "scorpio": {
+        "score": 5,
+        "keyword": "촉적중",
+        "text": "촉이 유난히 잘 맞는 날, 마음먹은 일에 깊이 파고들면 성과가 커요.",
+        "advice": "미뤄둔 중요한 대화, 오늘 꺼내보는 건 어때요?",
+        "lucky": { "color": "남색", "number": 33 }
+      },
+      "sagittarius": {
+        "score": 1,
+        "keyword": "발목잡힘",
+        "text": "멀리 가고 싶은 마음과 달리 자꾸 발목 잡는 일이 생겨요.",
+        "advice": "장거리 약속보다 가까운 일부터 처리하면 됩니다",
+        "lucky": { "color": "갈색", "number": 14 }
+      },
+      "capricorn": {
+        "score": 2,
+        "keyword": "체력저하",
+        "text": "묵묵히 버티는 힘은 있지만 오늘따라 유난히 지치기 쉬워요.",
+        "advice": "커피 대신 물 한 잔 더 마시기",
+        "lucky": { "color": "회색", "number": 9 }
+      }
+    }
+  }
+}
