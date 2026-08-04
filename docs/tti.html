@@ -4,9 +4,12 @@ layout: default
 title: 띠 운세
 ---
 <p class="crumb"><a href="{{ '/' | relative_url }}">← 홈</a></p>
-<h1 class="page-title">🐲 오늘의 띠 운세</h1>
+<h1 class="page-title" id="pageTitle">🐲 오늘의 띠 운세</h1>
 <p class="today-line" id="todayLine">불러오는 중…</p>
 <div class="notice hidden" id="notice"></div>
+
+<!-- 주기 탭·지난 운세 셀렉트를 app.js가 그린다 (볼 게 하나뿐이면 비워 둔다) -->
+<div class="period-nav" id="periodNav"></div>
 
 <p class="help-line">
   <span class="tag tag-year hidden" id="yearTti"></span>

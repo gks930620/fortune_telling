@@ -59,6 +59,42 @@ function validateBuckets(type, period, buckets) {
   return { ok: true, buckets: clean };
 }
 
+/**
+ * docs/data/index.json — 주기별로 열람 가능한 날짜 목록 (최신 순).
+ * 사이트의 주기 전환·과거 열람 UI가 이걸 읽는다. 정적 사이트라 디렉터리 목록을
+ * 브라우저가 알 방법이 없으므로, 발행할 때마다 코드가 목록을 만들어 둔다.
+ *
+ * 무한히 쌓이면 파일이 커지므로 주기별 상한을 둔다. 상한을 넘긴 과거 데이터는
+ * 파일로는 남아 있고(직접 URL로 접근 가능) 목록에서만 빠진다.
+ */
+const INDEX_LIMIT = { daily: 60, weekly: 26, monthly: 24, yearly: 10 };
+
+function writeIndex() {
+  const index = {};
+  for (const period of Object.keys(INDEX_LIMIT)) {
+    const dir = path.join(ROOT, 'docs', 'data', period);
+    let files;
+    try {
+      files = fs.readdirSync(dir);
+    } catch (e) {
+      continue;   // 아직 그 주기로 발행한 적이 없다
+    }
+    const dates = files
+      .filter(f => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
+      .map(f => f.replace(/\.json$/, ''))
+      .sort()
+      .reverse()
+      .slice(0, INDEX_LIMIT[period]);
+    if (dates.length) index[period] = dates;
+  }
+  fs.writeFileSync(
+    path.join(ROOT, 'docs', 'data', 'index.json'),
+    JSON.stringify(index) + '\n', 'utf8'
+  );
+  const summary = Object.entries(index).map(([p, d]) => `${p} ${d.length}`).join(' · ');
+  console.log(`index.json 갱신: ${summary || '없음'}`);
+}
+
 function main() {
   const date = process.env.FORTUNE_DATE || Manse.kstToday();
   const workDir = path.join(ROOT, 'work', date);
@@ -117,6 +153,9 @@ function main() {
       console.log(`  latest.${period} 유지 (${prevDate}) — 백필 날짜 ${date}는 포인터 미갱신`);
     }
   }
+
+  // 열람 목록 갱신 — 이번 실행으로 새로 생긴 날짜까지 반영된다
+  writeIndex();
 
   // 만세력 모듈을 브라우저용으로 동기화 (단일 원본: scripts/lib/manse.js)
   const dst = path.join(ROOT, 'docs', 'assets', 'js', 'manse.js');

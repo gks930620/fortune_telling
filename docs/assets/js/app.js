@@ -1,7 +1,7 @@
 /**
  * app.js — 오늘의 운세 프론트엔드
  *
- * 서버·AI 호출 없음. 매일 새벽 배치가 만든 정적 JSON(data/daily/<날짜>.json)을 읽는다.
+ * 서버·AI 호출 없음. 매일 새벽 배치가 만든 정적 JSON(data/<주기>/<날짜>.json)을 읽는다.
  * 페이지 진입점은 window.PAGE 로 구분한다 (home / tti / zodiac / saju / tarot).
  *
  * 데이터 경로는 window.DATA_BASE(Jekyll이 baseurl을 붙여 주입)를 쓴다.
@@ -17,7 +17,17 @@
   var PROFILE_KEY = 'fortune_profile';
   var TAROT_KEY = 'fortune_tarot_pick';
 
-  var state = { data: null, profile: null };
+  // index/period/date = 지금 보고 있는 것이 무엇인지. data = 그 묶음의 실제 내용.
+  var state = { index: null, period: 'daily', date: null, data: null, profile: null };
+
+  var PERIOD_ORDER = ['daily', 'weekly', 'monthly', 'yearly'];
+  var PERIOD_LABEL = { daily: '오늘', weekly: '이번 주', monthly: '이번 달', yearly: '올해' };
+  var PAGE_TITLE = {
+    tti: '🐲 {P}의 띠 운세',
+    zodiac: '✨ {P}의 별자리 운세',
+    saju: '📜 {P}의 사주 운세',
+    tarot: '🃏 오늘의 타로'
+  };
 
   function $(id) { return document.getElementById(id); }
 
@@ -28,7 +38,7 @@
     return e;
   }
 
-  // ---- 데이터 로드 (오늘 → latest 폴백) ----
+  // ---- 데이터 로드 ----
 
   function fetchJSON(url) {
     return fetch(url, { cache: 'no-cache' }).then(function (r) {
@@ -37,19 +47,24 @@
     });
   }
 
-  function loadData() {
-    var today = Manse.kstToday();
-    return fetchJSON(BASE + 'daily/' + today + '.json').catch(function () {
+  /* 정적 사이트라 브라우저가 디렉터리 목록을 알 방법이 없다. assemble.js가 발행할 때마다
+     index.json에 주기별 날짜 목록(최신 순)을 적어 둔다.
+     index.json이 아직 배포되지 않은 상태를 대비해 latest.json으로 폴백한다 —
+     그 경우 주기 전환은 되지만 과거 열람은 안 된다(주기마다 최신 1건만 알 수 있으므로). */
+  function loadIndex() {
+    return fetchJSON(BASE + 'index.json').catch(function () {
       return fetchJSON(BASE + 'latest.json').then(function (latest) {
-        if (!latest.daily || !latest.daily.date) throw new Error('no data');
-        return fetchJSON(BASE + 'daily/' + latest.daily.date + '.json').then(function (data) {
-          if (latest.daily.date !== today) {
-            showNotice('오늘 운세 준비 중 · ' + latest.daily.date + ' 운세 표시 중');
-          }
-          return data;
+        var idx = {};
+        PERIOD_ORDER.forEach(function (p) {
+          if (latest[p] && latest[p].date) idx[p] = [latest[p].date];
         });
+        return idx;
       });
     });
+  }
+
+  function loadBundle(period, date) {
+    return fetchJSON(BASE + period + '/' + date + '.json');
   }
 
   function showNotice(msg) {
@@ -57,6 +72,11 @@
     if (!n) return;
     n.textContent = msg;
     n.classList.remove('hidden');
+  }
+
+  function hideNotice() {
+    var n = $('notice');
+    if (n) n.classList.add('hidden');
   }
 
   // ---- 공통 렌더 ----
@@ -152,19 +172,107 @@
     return card;
   }
 
-  function renderTodayLine() {
-    var line = $('todayLine');
-    if (!line) return;
-    var d = state.data, ctx = d.context || {};
-    var txt = d.date + ' (' + (ctx.weekday || '') + ')';
-    if (ctx.day_ganzhi) txt += ' · ' + ctx.day_ganzhi.name;
-    if (ctx.year_ganzhi) txt += ' · ' + ctx.year_ganzhi.name + ' ' + ctx.year_ganzhi.zodiac + ' 해';
-    line.textContent = txt;
-  }
-
   function typeMissing(container, label) {
     container.textContent = '';
-    container.appendChild(el('p', 'placeholder', '오늘 ' + label + ' 운세 준비 중'));
+    container.appendChild(el('p', 'placeholder', label + ' 운세가 준비되지 않았어요'));
+  }
+
+  // ---- 주기·날짜 네비 ----
+
+  /** 셀렉트·머리글에 보일 날짜 라벨 — 주기마다 읽는 단위가 다르다 */
+  function dateLabel(period, date) {
+    var p = Manse.parseDate(date);
+    if (!p) return date;
+    if (period === 'yearly') return p.y + '년';
+    if (period === 'monthly') return p.y + '년 ' + p.m + '월';
+    if (period === 'weekly') return p.m + '월 ' + p.d + '일 주간';
+    return p.y + '-' + date.slice(5) + ' (' + Manse.weekdayKo(p.y, p.m, p.d) + ')';
+  }
+
+  function availablePeriods() {
+    return PERIOD_ORDER.filter(function (p) {
+      return state.index[p] && state.index[p].length;
+    });
+  }
+
+  function renderNav() {
+    var nav = $('periodNav');
+    if (!nav) return;   // 홈·타로에는 네비가 없다 (타로는 '하루 한 장'이라 주기가 없다)
+    nav.textContent = '';
+
+    var periods = availablePeriods();
+    if (periods.length > 1) {
+      var tabs = el('div', 'period-tabs');
+      periods.forEach(function (p) {
+        var on = p === state.period;
+        var b = el('button', 'period-tab' + (on ? ' on' : ''), PERIOD_LABEL[p]);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.addEventListener('click', function () { switchTo(p, state.index[p][0]); });
+        tabs.appendChild(b);
+      });
+      nav.appendChild(tabs);
+    }
+
+    var dates = state.index[state.period] || [];
+    if (dates.length > 1) {
+      var wrap = el('label', 'date-pick');
+      wrap.appendChild(el('span', 'date-pick-label', '지난 운세'));
+      var sel = document.createElement('select');
+      dates.forEach(function (d) {
+        var o = document.createElement('option');
+        o.value = d;
+        o.textContent = dateLabel(state.period, d);
+        sel.appendChild(o);
+      });
+      sel.value = state.date;
+      sel.addEventListener('change', function () { switchTo(state.period, sel.value); });
+      wrap.appendChild(sel);
+      nav.appendChild(wrap);
+    }
+  }
+
+  function renderHeadLine() {
+    var line = $('todayLine');
+    if (!line) return;
+    var ctx = state.data.context || {};
+    var txt = dateLabel(state.period, state.data.date);
+    if (state.period === 'weekly' && ctx.week_range) {
+      txt += ' · ' + ctx.week_range.start + ' ~ ' + ctx.week_range.end;
+    }
+    if (state.period === 'daily' && ctx.day_ganzhi) txt += ' · ' + ctx.day_ganzhi.name;
+    if (ctx.year_ganzhi) txt += ' · ' + ctx.year_ganzhi.name + ' ' + ctx.year_ganzhi.zodiac + ' 해';
+    line.textContent = txt;
+
+    var title = $('pageTitle');
+    if (title && PAGE_TITLE[PAGE]) {
+      title.textContent = PAGE_TITLE[PAGE].replace('{P}', PERIOD_LABEL[state.period]);
+    }
+  }
+
+  /** 지금 보고 있는 게 '최신'이 아닐 때만 안내를 띄운다 */
+  function updateNotice() {
+    var newest = (state.index[state.period] || [])[0];
+    if (state.date !== newest) {
+      showNotice('지난 운세를 보고 있어요 · ' + dateLabel(state.period, state.date));
+    } else if (state.period === 'daily' && state.date !== Manse.kstToday()) {
+      showNotice('오늘 운세 준비 중 · ' + dateLabel('daily', state.date) + ' 운세를 보여드려요');
+    } else {
+      hideNotice();
+    }
+  }
+
+  /** 주기·날짜를 바꿔 다시 그린다 */
+  function switchTo(period, date) {
+    if (period === state.period && date === state.date) return;
+    loadBundle(period, date).then(function (data) {
+      state.period = period;
+      state.date = date;
+      state.data = data;
+      renderAll();
+    }).catch(function () {
+      showNotice('그 운세를 불러오지 못했어요. 다른 날짜를 골라보세요.');
+      renderNav();   // 셀렉트를 실제 상태로 되돌린다
+    });
   }
 
   // ---- 띠 ----
@@ -174,8 +282,9 @@
     return ys.map(function (y) { return String(y).slice(2); }).join(' · ') + '년생';
   }
 
-  function initTti() {
+  function renderTti() {
     var list = $('list');
+    list.textContent = '';
     var buckets = (state.data.types || {}).tti;
     if (!buckets) return typeMissing(list, '띠');
 
@@ -204,8 +313,9 @@
 
   // ---- 별자리 ----
 
-  function initZodiac() {
+  function renderZodiac() {
     var list = $('list');
+    list.textContent = '';
     var buckets = (state.data.types || {}).zodiac;
     if (!buckets) return typeMissing(list, '별자리');
     Manse.STAR_SIGNS.forEach(function (s) {
@@ -266,7 +376,10 @@
     return ELEMENT_EMOJI[Manse.sajuStemInfo(id).element] || '📜';
   }
 
+  /* 십성은 '그날 하루'의 관계다. 주간·월간 데이터의 saju_relations는 그 주기 첫날의 값이라
+     "오늘은 ~한 날"로 읽으면 틀린 말이 된다. 그래서 daily일 때만 보여준다. */
   function todayRelation(id) {
+    if (state.period !== 'daily') return '';
     var rel = (state.data.context || {}).saju_relations;
     rel = rel ? rel[id] : null;
     return rel && SIPSEONG_PLAIN[rel] ? '오늘은 ' + SIPSEONG_PLAIN[rel] : '';
@@ -277,6 +390,10 @@
     var list = $('list');
     if (!list) return;
     list.textContent = '';
+
+    var title = $('listTitle');
+    if (title) title.textContent = '열 가지 기운의 ' + PERIOD_LABEL[state.period];
+
     var buckets = (state.data.types || {}).saju;
     if (!buckets) return typeMissing(list, '사주');
 
@@ -315,7 +432,7 @@
     var entry = buckets[stem.id];
     if (!entry) return typeMissing(box, '사주');
 
-    box.appendChild(el('h2', 'section-title', '나의 오늘'));
+    box.appendChild(el('h2', 'section-title', '나의 ' + PERIOD_LABEL[state.period]));
     box.appendChild(bucketCard({
       icon: '📜',
       title: natureOf(stem.id) + '의 기운을 타고난 당신',
@@ -323,6 +440,11 @@
       entry: entry,
       highlight: true
     }));
+  }
+
+  function renderSaju() {
+    renderMySaju();
+    renderSajuList();
   }
 
   /* 생년월일 선택 — 년/월/일 셀렉트 세 개.
@@ -369,12 +491,14 @@
     $('inYear').value = ''; $('inMonth').value = ''; syncDayOptions();
   }
 
-  /** 세 셀렉트 → 'YYYY-MM-DD'. 미선택·미래 날짜면 null */
+  /** 세 셀렉트 → 'YYYY-MM-DD'. 못 읽으면 왜 안 되는지까지 돌려준다 */
   function readBirthPicker() {
     var y = +$('inYear').value, m = +$('inMonth').value, d = +$('inDay').value;
-    if (!y || !m || !d || d > daysInMonth(y, m)) return null;
+    if (!y || !m || !d) return { error: '생년월일을 모두 골라주세요.' };
+    if (d > daysInMonth(y, m)) return { error: y + '년 ' + m + '월에는 ' + d + '일이 없어요.' };
     var s = y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-    return s > Manse.kstToday() ? null : s;
+    if (s > Manse.kstToday()) return { error: '아직 오지 않은 날짜예요.' };
+    return { birth: s };
   }
 
   function showSajuSummary() {
@@ -404,8 +528,7 @@
       state.profile = null;
       resetBirthPicker();
       showSajuSummary();
-      renderMySaju();
-      renderSajuList();   // '나' 배지도 함께 걷어낸다
+      renderSaju();   // '나' 배지도 함께 걷어낸다
     });
     acts.appendChild(clear);
     sum.appendChild(acts);
@@ -414,23 +537,22 @@
     form.classList.add('hidden');
   }
 
+  /** 사주 페이지의 1회성 배선 — 데이터와 무관한 부분 */
   function initSaju() {
     state.profile = loadProfile();
     buildBirthPicker(state.profile && state.profile.birth);
 
     $('btnSave').addEventListener('click', function () {
-      var v = readBirthPicker();
-      if (!v) { showNotice('생년월일을 모두 골라주세요.'); return; }
-      state.profile = { birth: v };
+      var r = readBirthPicker();
+      if (r.error) { showNotice(r.error); return; }
+      state.profile = { birth: r.birth };
       localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profile));
+      hideNotice();
       showSajuSummary();
-      renderMySaju();
-      renderSajuList();
+      renderSaju();
     });
 
     showSajuSummary();
-    renderMySaju();
-    renderSajuList();
   }
 
   /* 설명 팝업 — 네 페이지가 같은 구조를 쓴다(버튼 #btnWhat, 다이얼로그 #whatModal).
@@ -461,8 +583,9 @@
     catch (e) { return null; }
   }
 
-  function initTarot() {
+  function renderTarot() {
     var stage = $('stage');
+    stage.textContent = '';
     var buckets = (state.data.types || {}).tarot;
     if (!buckets) return typeMissing(stage, '타로');
 
@@ -528,18 +651,53 @@
 
   // ---- 시작 ----
 
-  var ROUTES = { tti: initTti, zodiac: initZodiac, saju: initSaju, tarot: initTarot };
+  var ROUTES = { tti: renderTti, zodiac: renderZodiac, saju: renderSaju, tarot: renderTarot };
+  var SETUP = { saju: initSaju };
 
-  document.addEventListener('DOMContentLoaded', function () {
+  function renderAll() {
+    renderHeadLine();
+    renderNav();
+    updateNotice();
+    if (ROUTES[PAGE]) ROUTES[PAGE]();
+  }
+
+  /** 첫 진입에 무엇을 보여줄지 — 오늘 daily가 있으면 그것, 없으면 가장 최근 것 */
+  function pickInitial(index) {
+    var today = Manse.kstToday();
+    var daily = index.daily || [];
+    if (daily.indexOf(today) >= 0) return { period: 'daily', date: today };
+    if (daily.length) return { period: 'daily', date: daily[0] };
+    for (var i = 0; i < PERIOD_ORDER.length; i++) {
+      var p = PERIOD_ORDER[i];
+      if (index[p] && index[p].length) return { period: p, date: index[p][0] };
+    }
+    return null;
+  }
+
+  function start() {
     wireModal();   // 데이터 로드와 무관하게 항상 열 수 있어야 한다
-    loadData().then(function (data) {
-      state.data = data;
-      renderTodayLine();
-      if (ROUTES[PAGE]) ROUTES[PAGE]();
+    if (SETUP[PAGE]) SETUP[PAGE]();
+
+    loadIndex().then(function (index) {
+      var start = pickInitial(index);
+      if (!start) throw new Error('no data');
+      state.index = index;
+      return loadBundle(start.period, start.date).then(function (data) {
+        state.period = start.period;
+        state.date = start.date;
+        state.data = data;
+        renderAll();
+      });
     }).catch(function () {
       var line = $('todayLine');
       if (line) line.textContent = '운세를 불러오지 못했어요.';
       showNotice('잠시 후 다시 시도해 주세요.');
     });
-  });
+  }
+
+  /* DOMContentLoaded를 그냥 기다리면, 이 스크립트가 그 이벤트 뒤에 실행되는 경우
+     (defer·async를 붙이거나 나중에 주입하는 경우) 페이지가 영영 비어 있게 된다.
+     지금은 body 끝의 일반 <script>라 안전하지만, 그 전제가 깨져도 버티게 해 둔다. */
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
 })();

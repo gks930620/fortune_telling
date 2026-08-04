@@ -139,7 +139,11 @@ jobs:
         run: |
           git config user.name "fortune-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add -A
+          # 산출물 경로만 커밋한다. --allowedTools로 Bash·git은 막았지만 Write는 저장소
+          # 어디든 쓸 수 있다(경로 단위 제한이 이 CLI에서 안 먹는다 — 위 주석 참고).
+          # 예전 `git add -A`는 AI가 엉뚱한 곳에 만든 파일까지 그대로 커밋했다.
+          # 여기서 범위를 좁히면 계약 밖 파일은 러너와 함께 버려진다.
+          git add work docs/data docs/_posts docs/assets/js/manse.js
           if git diff --cached --quiet; then
             echo "변경 없음 — 커밋 생략"
             exit 0

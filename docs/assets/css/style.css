@@ -65,6 +65,34 @@ a:hover { text-decoration: underline; }
 .hidden { display: none !important; }
 .fineprint { color: var(--sub); font-size: .85rem; line-height: 1.6; }
 
+/* 주기 탭 · 지난 운세 선택 — app.js가 그린다. 볼 게 하나뿐인 날엔 통째로 비어 있다
+   (빈 div의 margin이 남지 않게 :empty를 접어 둔다) */
+.period-nav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin: 14px 0 0;
+}
+.period-nav:empty { display: none; }
+.period-tabs {
+  display: flex; gap: 4px; padding: 3px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+}
+.period-tab {
+  background: transparent; border: 0; border-radius: 999px;
+  padding: 6px 14px; font: inherit; font-size: .88rem; font-weight: 700;
+  color: var(--sub); cursor: pointer; white-space: nowrap;
+  transition: background .12s, color .12s;
+}
+.period-tab:hover { color: var(--ink); }
+.period-tab.on { background: var(--accent); color: #fff; }
+.date-pick { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.date-pick-label { color: var(--sub); font-size: .82rem; white-space: nowrap; }
+.date-pick select {
+  padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--card); color: var(--ink);
+  font: inherit; font-size: .85rem; cursor: pointer;
+}
+.date-pick select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
 /* 홈 메뉴 */
 .menu-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 20px; }
 @media (min-width: 640px) { .menu-grid { grid-template-columns: 1fr 1fr; } }
@@ -153,7 +181,6 @@ button.ghost {
   background: var(--accent-soft); color: var(--accent); border-radius: 999px;
   padding: 4px 12px; font-size: .85rem; font-weight: 700;
 }
-.profile-card .lead { color: var(--sub); margin: 0 0 14px; font-size: .95rem; }
 .privacy { color: var(--sub); font-size: .82rem; margin: 12px 0 0; }
 .empty-hint { color: var(--sub); text-align: center; padding: 28px 12px; margin: 0; }
 

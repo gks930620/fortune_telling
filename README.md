@@ -23,14 +23,22 @@ AI가 **매일 새벽 모든 경우의 수를 미리 생성**해 두는 정적 �
 
 매일(daily) · 월요일(weekly) · 매월 1일(monthly) · 1월 1일(yearly)
 
+사이트에서는 주기를 탭으로 바꿔 볼 수 있고, `docs/data/index.json`에 실린 날짜만큼
+**지난 운세도 거슬러 볼 수 있다**(daily 60일 · weekly 26주 · monthly 24개월 · yearly 10년).
+
 ## 파이프라인
 
 ```
 context.js(계산) → 역할 AI 4명(운세 JSON) → assemble.js(검증·병합) → writer AI(리포트 md) → commit → Pages
 ```
 
-- 날짜·일진(60갑자)·십성·주기 판정은 **코드**(`scripts/`), 해석·글은 **AI**(`prompts/`)
-- 역할 AI 출력은 `work/<날짜>/`에 스냅샷으로 커밋 (검증 근거)
+- 날짜·일진(60갑자)·십성·**합충**·별자리 오행 관계·주기 판정은 **코드**(`scripts/`),
+  해석·글은 **AI**(`prompts/`)
+- `context.json`에 **최근 3회 각 버킷에 쓴 keyword**를 함께 실어 보낸다.
+  역할 AI는 매일 독립 세션이라 어제를 모른다 — 이 필드가 그 기억이고,
+  "같은 말을 반복하지 마라"의 근거가 된다.
+- 역할 AI 출력은 `work/<날짜>/`에 스냅샷으로 커밋 (검증 근거).
+  **과거 스냅샷은 고쳐 쓰지 않는다** — 그날 AI가 실제로 본 것의 기록이다.
 - 사이트는 `docs/` (Jekyll · GitHub Pages)
 - `assemble.js`가 `scripts/lib/manse.js`를 `docs/assets/js/`로 복사한다 —
   **docs 쪽 사본을 직접 수정하지 말 것** (서버·브라우저 계산이 갈라지는 것을 막는 장치)

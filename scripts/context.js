@@ -31,6 +31,50 @@ function addDays(dateStr, n) {
     String(t.getUTCDate()).padStart(2, '0');
 }
 
+/**
+ * 최근 발행분에서 버킷별 keyword를 긁어온다 — "파일이 기억이다".
+ *
+ * 역할 AI는 매일 독립 세션이라 어제 자기가 뭐라고 썼는지 모른다. 그래서 매일 처음부터
+ * 같은 고정관념을 다시 유도해냈다(황소자리=안정, 죽음 카드=손절 …). 이 값을 context에 실어
+ * "이 단어들은 다시 쓰지 마라"고 지시하면 점수 고착과 키워드 반복이 함께 풀린다.
+ *
+ * 같은 주기끼리만 본다 — 주간운세의 '지난 회'는 지난주지 어제가 아니다.
+ * 반환: { tti: { rat: ['재정비','신중모드'], … }, saju: {…}, … }  (없으면 빈 객체)
+ */
+function recentKeywords(period, beforeDate, count) {
+  const dir = path.join(ROOT, 'docs', 'data', period);
+  let files;
+  try {
+    files = fs.readdirSync(dir).filter(f => f.endsWith('.json'));
+  } catch (e) {
+    return {};   // 첫 실행 — 아직 발행 이력이 없다
+  }
+  // 오늘 것은 제외한다 (재실행이면 이미 있을 수 있는데, 자기 자신을 피하라고 할 순 없다)
+  const dates = files.map(f => f.replace(/\.json$/, ''))
+    .filter(d => d < beforeDate)
+    .sort()
+    .slice(-count);
+
+  const out = {};
+  for (const d of dates) {
+    let data;
+    try {
+      data = JSON.parse(fs.readFileSync(path.join(dir, `${d}.json`), 'utf8'));
+    } catch (e) {
+      continue;   // 깨진 과거 파일 하나 때문에 오늘 실행을 막지 않는다
+    }
+    for (const [type, buckets] of Object.entries(data.types || {})) {
+      out[type] = out[type] || {};
+      for (const [id, entry] of Object.entries(buckets)) {
+        if (!entry || typeof entry.keyword !== 'string') continue;
+        out[type][id] = out[type][id] || [];
+        out[type][id].push(entry.keyword);
+      }
+    }
+  }
+  return out;
+}
+
 function main() {
   const date = process.env.FORTUNE_DATE || Manse.kstToday();
   const p = Manse.parseDate(date);
@@ -68,9 +112,19 @@ function main() {
     new_year_ganzhi: periods.includes('yearly') ? calendarYearGanzhi(p.y) : undefined,
     // 오늘의 일간이 각 일간(사주 버킷)에 갖는 십성 관계 — 사주 역할 AI의 해석 근거
     saju_relations: Manse.sipseongMap(day.stemIndex),
+    // 오늘 일진의 지지가 12띠에 갖는 충·육합·삼합 — 띠 역할 AI의 해석 근거.
+    // 예전엔 이걸 안 줘서 AI가 기억으로 추론했다(맞았지만 보증이 없었다).
+    tti_relations: Manse.branchRelationMap(day.branchIndex),
+    // 오늘 일진 오행이 12별자리 원소에 갖는 생·극 — 별자리 역할 AI의 해석 근거.
+    // 이게 없어서 별자리만 매일 성격론을 되풀이했다(점수가 안 흔들렸다).
+    zodiac_relations: Manse.starSignRelationMap(day.stemElement, day.branchElement),
     week_range: weekRange,
     month: date.slice(0, 7),
     year: p.y,
+    // 주기별로 "최근 3회에 내가 쓴 키워드" — 역할 AI가 같은 말을 되풀이하지 않도록
+    recent_keywords: Object.fromEntries(
+      periods.map(period => [period, recentKeywords(period, date, 3)])
+    ),
     generated_at: new Date().toISOString()
   };
 
@@ -81,6 +135,12 @@ function main() {
   console.log(`context 생성 완료: work/${date}/context.json`);
   console.log(`  ${date} (${weekday}) · ${context.day_ganzhi.name} · ${context.year_ganzhi.name}`);
   console.log(`  발행 주기: ${periods.join(', ')}`);
+  for (const period of periods) {
+    const mem = context.recent_keywords[period];
+    const types = Object.keys(mem);
+    const n = types.reduce((a, t) => a + Object.keys(mem[t]).length, 0);
+    console.log(`  최근 키워드(${period}): ${types.length}종 ${n}버킷` + (n ? '' : ' — 이력 없음(첫 발행)'));
+  }
 
   // GitHub Actions 출력 (워크플로가 역할·집필 단계에 주입)
   if (process.env.GITHUB_OUTPUT) {

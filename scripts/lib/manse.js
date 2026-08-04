@@ -27,20 +27,29 @@
   var ZODIAC_KO = ['쥐', '소', '호랑이', '토끼', '용', '뱀', '말', '양', '원숭이', '닭', '개', '돼지'];
   var ZODIAC_EMOJI = ['🐭', '🐮', '🐯', '🐰', '🐲', '🐍', '🐴', '🐑', '🐵', '🐔', '🐶', '🐷'];
 
-  // 한국 잡지 관례 날짜 구간 (경계일은 관례에 따라 ±1일 차이가 있을 수 있음)
+  /* 한국 잡지 관례 날짜 구간.
+     서양 천문 기준(사수 ~12/21, 염소 12/22~)과 최대 3일 차이가 나는데, 이건 오차가 아니라
+     의도다 — 국내 잡지·포털 운세가 오래 써 온 표(사수 11/23~12/24, 염소 12/25~1/19)를 따랐다.
+     방문자가 다른 사이트에서 본 자기 별자리와 어긋나지 않는 쪽을 택한 것이다.
+     바꾸려면 이 주석과 zodiac.html의 안내 문구를 함께 고칠 것. */
+  /* `element`는 서양 4원소(화면 표시용), `ohaeng`은 그것을 오행으로 옮긴 값이다.
+     4원소↔오행은 전해 내려오는 대응표가 없다 — 아래는 이 프로젝트가 정한 것이다:
+       불→화 · 흙→토 · 물→수 · 공기→목(바람·확산의 기운)
+     금(金)이 남는데, 원소가 넷뿐이라 어느 매핑을 써도 하나는 남는다.
+     이 대응을 바꾸면 별자리 점수 경향이 통째로 달라지니 근거를 남기고 바꿀 것. */
   var STAR_SIGNS = [
-    { id: 'aquarius',    ko: '물병자리',   symbol: '♒', from: [1, 20],  to: [2, 18] },
-    { id: 'pisces',      ko: '물고기자리', symbol: '♓', from: [2, 19],  to: [3, 20] },
-    { id: 'aries',       ko: '양자리',     symbol: '♈', from: [3, 21],  to: [4, 19] },
-    { id: 'taurus',      ko: '황소자리',   symbol: '♉', from: [4, 20],  to: [5, 20] },
-    { id: 'gemini',      ko: '쌍둥이자리', symbol: '♊', from: [5, 21],  to: [6, 21] },
-    { id: 'cancer',      ko: '게자리',     symbol: '♋', from: [6, 22],  to: [7, 22] },
-    { id: 'leo',         ko: '사자자리',   symbol: '♌', from: [7, 23],  to: [8, 22] },
-    { id: 'virgo',       ko: '처녀자리',   symbol: '♍', from: [8, 23],  to: [9, 23] },
-    { id: 'libra',       ko: '천칭자리',   symbol: '♎', from: [9, 24],  to: [10, 22] },
-    { id: 'scorpio',     ko: '전갈자리',   symbol: '♏', from: [10, 23], to: [11, 22] },
-    { id: 'sagittarius', ko: '사수자리',   symbol: '♐', from: [11, 23], to: [12, 24] },
-    { id: 'capricorn',   ko: '염소자리',   symbol: '♑', from: [12, 25], to: [1, 19] }
+    { id: 'aquarius',    ko: '물병자리',   symbol: '♒', from: [1, 20],  to: [2, 18],  element: '공기', ohaeng: '목' },
+    { id: 'pisces',      ko: '물고기자리', symbol: '♓', from: [2, 19],  to: [3, 20],  element: '물',   ohaeng: '수' },
+    { id: 'aries',       ko: '양자리',     symbol: '♈', from: [3, 21],  to: [4, 19],  element: '불',   ohaeng: '화' },
+    { id: 'taurus',      ko: '황소자리',   symbol: '♉', from: [4, 20],  to: [5, 20],  element: '흙',   ohaeng: '토' },
+    { id: 'gemini',      ko: '쌍둥이자리', symbol: '♊', from: [5, 21],  to: [6, 21],  element: '공기', ohaeng: '목' },
+    { id: 'cancer',      ko: '게자리',     symbol: '♋', from: [6, 22],  to: [7, 22],  element: '물',   ohaeng: '수' },
+    { id: 'leo',         ko: '사자자리',   symbol: '♌', from: [7, 23],  to: [8, 22],  element: '불',   ohaeng: '화' },
+    { id: 'virgo',       ko: '처녀자리',   symbol: '♍', from: [8, 23],  to: [9, 23],  element: '흙',   ohaeng: '토' },
+    { id: 'libra',       ko: '천칭자리',   symbol: '♎', from: [9, 24],  to: [10, 22], element: '공기', ohaeng: '목' },
+    { id: 'scorpio',     ko: '전갈자리',   symbol: '♏', from: [10, 23], to: [11, 22], element: '물',   ohaeng: '수' },
+    { id: 'sagittarius', ko: '사수자리',   symbol: '♐', from: [11, 23], to: [12, 24], element: '불',   ohaeng: '화' },
+    { id: 'capricorn',   ko: '염소자리',   symbol: '♑', from: [12, 25], to: [1, 19],  element: '흙',   ohaeng: '토' }
   ];
 
   var TAROT = [
@@ -164,6 +173,87 @@
     return map;
   }
 
+  /**
+   * 지지 관계(충·육합·삼합) — 십성과 똑같이 결정적 계산이므로 코드가 한다.
+   * 예전엔 이 표가 없어서 역할 AI가 12지지의 충·합을 기억으로 추론했다.
+   * 지금까지 결과는 맞았지만 틀려도 아무도 모르는 구조였다. AI는 이 값을 해석만 한다.
+   *
+   *   충(沖)   마주 보는 자리 — 자오 축미 인신 묘유 진술 사해   (인덱스 +6)
+   *   육합(合) 짝을 이루는 자리 — 자축 인해 묘술 진유 사신 오미  (인덱스 합 = 1 또는 13)
+   *   삼합(三合) 한 국(局)을 이루는 셋 — 신자진(수) 해묘미(목) 인오술(화) 사유축(금)
+   *              (인덱스를 4로 나눈 나머지가 같다)
+   * 셋은 서로 겹치지 않는다(수학적으로 배타적).
+   */
+  var SAMHAP_ELEMENT = ['수', '금', '화', '목'];   // (branchIndex % 4) → 국의 오행
+
+  /** 두 지지의 관계. 없으면 null */
+  function branchRelation(a, b) {
+    if (a === b) return '같음';
+    if (mod(a + 6, 12) === b) return '충';
+    if (mod(13 - a, 12) === b) return '육합';
+    if (mod(a, 4) === mod(b, 4)) return '삼합';
+    return null;
+  }
+
+  /**
+   * 오늘 일진의 지지가 12띠 각각에 갖는 관계 맵.
+   * { rat: { relation: '충', element: null }, tiger: { relation: '삼합', element: '화' }, … }
+   * `element`는 삼합일 때 그 국의 오행, 아니면 null.
+   */
+  function branchRelationMap(todayBranchIndex) {
+    var map = {};
+    for (var i = 0; i < 12; i++) {
+      var rel = branchRelation(todayBranchIndex, i);
+      map[ZODIAC_IDS[i]] = {
+        relation: rel,
+        element: rel === '삼합' ? SAMHAP_ELEMENT[mod(i, 4)] : null
+      };
+    }
+    return map;
+  }
+
+  /**
+   * 오행 상생·상극 — 오늘 일진의 오행(day)이 상대 기운(target)에 어떻게 작용하는지.
+   * 별자리 역할 AI가 "오늘이 이 별자리에 순한 날인가"를 판단하는 근거다.
+   * 이름은 전부 **target(별자리) 입장**에서 붙였다.
+   *
+   *   같음  같은 기운이 겹친다 (증폭)
+   *   생    오늘이 target을 살려준다        (목→화: 순한 날)
+   *   극    오늘이 target을 눌러 온다        (목→토: 버거운 날)
+   *   설    target이 오늘을 생한다 — 기운이 빠져나간다 (목→수, 즉 수생목: 소모되는 날)
+   *   역극  target이 오늘을 극한다 — 힘을 써야 한다   (목→금, 즉 금극목: 분발하는 날)
+   */
+  function elementRelation(day, target) {
+    var i = ELEMENTS.indexOf(day), j = ELEMENTS.indexOf(target);
+    if (i < 0 || j < 0) return null;
+    if (i === j) return '같음';
+    if (mod(i + 1, 5) === j) return '생';
+    if (mod(i + 2, 5) === j) return '극';
+    if (mod(j + 1, 5) === i) return '설';
+    return '역극';
+  }
+
+  /**
+   * 오늘 일진이 12별자리 각각에 갖는 오행 관계 맵.
+   * { aries: { element: '불', stem: '역극', branch: '생' }, … }
+   * 별자리 역할 AI가 매일 성격론만 되풀이하지 않도록, '그날의 근거'를 코드가 준다.
+   *
+   * 천간·지지를 **둘 다** 준다. 천간 오행은 이틀마다 바뀌어서(갑을=목, 병정=화 …)
+   * 그것만 쓰면 별자리 운세가 이틀씩 똑같아진다. 지지를 겹쳐야 매일 달라진다.
+   */
+  function starSignRelationMap(stemElement, branchElement) {
+    var map = {};
+    for (var i = 0; i < STAR_SIGNS.length; i++) {
+      var s = STAR_SIGNS[i];
+      map[s.id] = {
+        element: s.element,
+        stem: elementRelation(stemElement, s.ohaeng),
+        branch: elementRelation(branchElement, s.ohaeng)
+      };
+    }
+    return map;
+  }
+
   // ---- 화면 표시용 조회 --------------------------------------------------
 
   /**
@@ -243,6 +333,8 @@
     zodiacFromBirth: zodiacFromBirth, starSignFromBirth: starSignFromBirth,
     dayStemFromBirth: dayStemFromBirth,
     sipseong: sipseong, sipseongMap: sipseongMap,
+    branchRelation: branchRelation, branchRelationMap: branchRelationMap,
+    elementRelation: elementRelation, starSignRelationMap: starSignRelationMap,
     zodiacYears: zodiacYears, zodiacInfo: zodiacInfo,
     starSignRange: starSignRange, starSignById: starSignById,
     sajuStemInfo: sajuStemInfo, tarotById: tarotById,

@@ -4,9 +4,12 @@ layout: default
 title: 사주 운세
 ---
 <p class="crumb"><a href="{{ '/' | relative_url }}">← 홈</a></p>
-<h1 class="page-title">📜 오늘의 사주 운세</h1>
+<h1 class="page-title" id="pageTitle">📜 오늘의 사주 운세</h1>
 <p class="today-line" id="todayLine">불러오는 중…</p>
 <div class="notice hidden" id="notice"></div>
+
+<!-- 주기 탭·지난 운세 셀렉트를 app.js가 그린다 (볼 게 하나뿐이면 비워 둔다) -->
+<div class="period-nav" id="periodNav"></div>
 
 <p class="help-line"><button class="link-btn" id="btnWhat">사주가 뭔가요? 🔎</button></p>
 
@@ -32,7 +35,7 @@ title: 사주 운세
 
 <div id="myResult"></div>
 
-<h2 class="section-title">열 가지 기운의 오늘</h2>
+<h2 class="section-title" id="listTitle">열 가지 기운의 오늘</h2>
 <p class="page-desc">내 기운엔 <strong>나</strong> 표시</p>
 <div class="bucket-grid" id="list"></div>
 
