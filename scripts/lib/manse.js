@@ -36,20 +36,25 @@
      4원소↔오행은 전해 내려오는 대응표가 없다 — 아래는 이 프로젝트가 정한 것이다:
        불→화 · 흙→토 · 물→수 · 공기→목(바람·확산의 기운)
      금(金)이 남는데, 원소가 넷뿐이라 어느 매핑을 써도 하나는 남는다.
-     이 대응을 바꾸면 별자리 점수 경향이 통째로 달라지니 근거를 남기고 바꿀 것. */
+     이 대응을 바꾸면 별자리 점수 경향이 통째로 달라지니 근거를 남기고 바꿀 것.
+
+     `modality`는 점성술의 3특질(활동·고정·변통)이다. 이게 없으면 같은 원소 3개가
+     오행 관계까지 똑같아져서 **점수가 셋 다 같아진다** (2026-08-05 실제로 그랬다 —
+     불 별자리 셋이 나란히 1점). 원소(4) × 특질(3) = 12라서, 둘을 합치면
+     12별자리가 각각 유일해진다. 갈라 주는 축이 하나 더 필요해서 넣은 값이다. */
   var STAR_SIGNS = [
-    { id: 'aquarius',    ko: '물병자리',   symbol: '♒', from: [1, 20],  to: [2, 18],  element: '공기', ohaeng: '목' },
-    { id: 'pisces',      ko: '물고기자리', symbol: '♓', from: [2, 19],  to: [3, 20],  element: '물',   ohaeng: '수' },
-    { id: 'aries',       ko: '양자리',     symbol: '♈', from: [3, 21],  to: [4, 19],  element: '불',   ohaeng: '화' },
-    { id: 'taurus',      ko: '황소자리',   symbol: '♉', from: [4, 20],  to: [5, 20],  element: '흙',   ohaeng: '토' },
-    { id: 'gemini',      ko: '쌍둥이자리', symbol: '♊', from: [5, 21],  to: [6, 21],  element: '공기', ohaeng: '목' },
-    { id: 'cancer',      ko: '게자리',     symbol: '♋', from: [6, 22],  to: [7, 22],  element: '물',   ohaeng: '수' },
-    { id: 'leo',         ko: '사자자리',   symbol: '♌', from: [7, 23],  to: [8, 22],  element: '불',   ohaeng: '화' },
-    { id: 'virgo',       ko: '처녀자리',   symbol: '♍', from: [8, 23],  to: [9, 23],  element: '흙',   ohaeng: '토' },
-    { id: 'libra',       ko: '천칭자리',   symbol: '♎', from: [9, 24],  to: [10, 22], element: '공기', ohaeng: '목' },
-    { id: 'scorpio',     ko: '전갈자리',   symbol: '♏', from: [10, 23], to: [11, 22], element: '물',   ohaeng: '수' },
-    { id: 'sagittarius', ko: '사수자리',   symbol: '♐', from: [11, 23], to: [12, 24], element: '불',   ohaeng: '화' },
-    { id: 'capricorn',   ko: '염소자리',   symbol: '♑', from: [12, 25], to: [1, 19],  element: '흙',   ohaeng: '토' }
+    { id: 'aquarius',    ko: '물병자리',   symbol: '♒', from: [1, 20],  to: [2, 18],  element: '공기', ohaeng: '목', modality: '고정' },
+    { id: 'pisces',      ko: '물고기자리', symbol: '♓', from: [2, 19],  to: [3, 20],  element: '물',   ohaeng: '수', modality: '변통' },
+    { id: 'aries',       ko: '양자리',     symbol: '♈', from: [3, 21],  to: [4, 19],  element: '불',   ohaeng: '화', modality: '활동' },
+    { id: 'taurus',      ko: '황소자리',   symbol: '♉', from: [4, 20],  to: [5, 20],  element: '흙',   ohaeng: '토', modality: '고정' },
+    { id: 'gemini',      ko: '쌍둥이자리', symbol: '♊', from: [5, 21],  to: [6, 21],  element: '공기', ohaeng: '목', modality: '변통' },
+    { id: 'cancer',      ko: '게자리',     symbol: '♋', from: [6, 22],  to: [7, 22],  element: '물',   ohaeng: '수', modality: '활동' },
+    { id: 'leo',         ko: '사자자리',   symbol: '♌', from: [7, 23],  to: [8, 22],  element: '불',   ohaeng: '화', modality: '고정' },
+    { id: 'virgo',       ko: '처녀자리',   symbol: '♍', from: [8, 23],  to: [9, 23],  element: '흙',   ohaeng: '토', modality: '변통' },
+    { id: 'libra',       ko: '천칭자리',   symbol: '♎', from: [9, 24],  to: [10, 22], element: '공기', ohaeng: '목', modality: '활동' },
+    { id: 'scorpio',     ko: '전갈자리',   symbol: '♏', from: [10, 23], to: [11, 22], element: '물',   ohaeng: '수', modality: '고정' },
+    { id: 'sagittarius', ko: '사수자리',   symbol: '♐', from: [11, 23], to: [12, 24], element: '불',   ohaeng: '화', modality: '변통' },
+    { id: 'capricorn',   ko: '염소자리',   symbol: '♑', from: [12, 25], to: [1, 19],  element: '흙',   ohaeng: '토', modality: '활동' }
   ];
 
   var TAROT = [
@@ -235,11 +240,14 @@
 
   /**
    * 오늘 일진이 12별자리 각각에 갖는 오행 관계 맵.
-   * { aries: { element: '불', stem: '역극', branch: '생' }, … }
+   * { aries: { element: '불', modality: '활동', stem: '역극', branch: '극' }, … }
    * 별자리 역할 AI가 매일 성격론만 되풀이하지 않도록, '그날의 근거'를 코드가 준다.
    *
    * 천간·지지를 **둘 다** 준다. 천간 오행은 이틀마다 바뀌어서(갑을=목, 병정=화 …)
    * 그것만 쓰면 별자리 운세가 이틀씩 똑같아진다. 지지를 겹쳐야 매일 달라진다.
+   *
+   * `modality`를 함께 주는 이유: stem·branch만으로는 같은 원소 3개가 완전히 같은 값을
+   * 받아 점수까지 같아진다. 특질이 그 셋을 가르는 축이다. (STAR_SIGNS 주석 참고)
    */
   function starSignRelationMap(stemElement, branchElement) {
     var map = {};
@@ -247,6 +255,7 @@
       var s = STAR_SIGNS[i];
       map[s.id] = {
         element: s.element,
+        modality: s.modality,
         stem: elementRelation(stemElement, s.ohaeng),
         branch: elementRelation(branchElement, s.ohaeng)
       };
